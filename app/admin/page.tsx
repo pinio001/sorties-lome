@@ -1,5 +1,9 @@
 "use client";
 
+<a className="text-sm underline" href="/admin/manage">
+  Gérer les événements (modifier/supprimer)
+</a>
+
 import { useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
