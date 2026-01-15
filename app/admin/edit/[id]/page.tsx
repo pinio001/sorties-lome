@@ -7,12 +7,13 @@ import { useParams, useRouter } from "next/navigation";
 type EventItem = {
   id: string;
   title: string | null;
-  date: string | null;
-  time: string | null;
   location: string | null;
   image: string | null;
   whatsapp: string | null;
   is_featured: boolean | null;
+  featured_rank: number | null;
+  event_date: string | null; // YYYY-MM-DD
+  event_time: string | null; // HH:MM:SS ou HH:MM
 };
 
 export default function EditEventPage() {
@@ -28,7 +29,13 @@ export default function EditEventPage() {
     const load = async () => {
       if (!id) return;
       setLoading(true);
-      const { data, error } = await supabase.from("events").select("*").eq("id", id).single();
+
+      const { data, error } = await supabase
+        .from("events")
+        .select("*")
+        .eq("id", id)
+        .single();
+
       if (error) setMsg("Erreur: " + error.message);
       setEvent((data ?? null) as any);
       setLoading(false);
@@ -41,17 +48,19 @@ export default function EditEventPage() {
     if (!event) return;
 
     setMsg(null);
+
     const res = await fetch(`/api/admin/events/${event.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title: event.title,
-        date: event.date,
-        time: event.time,
         location: event.location,
         image: event.image,
         whatsapp: event.whatsapp,
-        is_featured: event.is_featured,
+        is_featured: Boolean(event.is_featured),
+        featured_rank: Number(event.featured_rank ?? 0),
+        event_date: event.event_date,
+        event_time: event.event_time,
       }),
     });
 
@@ -67,6 +76,9 @@ export default function EditEventPage() {
   if (loading) return <main className="p-4 max-w-md mx-auto">Chargement...</main>;
   if (!event) return <main className="p-4 max-w-md mx-auto">Introuvable.</main>;
 
+  // Supabase peut renvoyer HH:MM:SS, on affiche HH:MM
+  const timeForInput = (event.event_time ?? "").slice(0, 5);
+
   return (
     <main className="p-4 max-w-md mx-auto">
       <h1 className="text-2xl font-bold mb-4">Modifier événement</h1>
@@ -78,30 +90,36 @@ export default function EditEventPage() {
           onChange={(e) => setEvent({ ...event, title: e.target.value })}
           placeholder="Titre"
         />
-        <input
-          className="w-full border rounded-lg p-2"
-          value={event.date ?? ""}
-          onChange={(e) => setEvent({ ...event, date: e.target.value })}
-          placeholder="Date"
-        />
-        <input
-          className="w-full border rounded-lg p-2"
-          value={event.time ?? ""}
-          onChange={(e) => setEvent({ ...event, time: e.target.value })}
-          placeholder="Heure"
-        />
+
+        <div className="grid grid-cols-2 gap-2">
+          <input
+            className="w-full border rounded-lg p-2"
+            type="date"
+            value={event.event_date ?? ""}
+            onChange={(e) => setEvent({ ...event, event_date: e.target.value })}
+          />
+          <input
+            className="w-full border rounded-lg p-2"
+            type="time"
+            value={timeForInput}
+            onChange={(e) => setEvent({ ...event, event_time: e.target.value })}
+          />
+        </div>
+
         <input
           className="w-full border rounded-lg p-2"
           value={event.location ?? ""}
           onChange={(e) => setEvent({ ...event, location: e.target.value })}
           placeholder="Lieu"
         />
+
         <input
           className="w-full border rounded-lg p-2"
           value={event.image ?? ""}
           onChange={(e) => setEvent({ ...event, image: e.target.value })}
           placeholder="URL image"
         />
+
         <input
           className="w-full border rounded-lg p-2"
           value={event.whatsapp ?? ""}
@@ -117,6 +135,15 @@ export default function EditEventPage() {
           />
           Mettre en avant (Premium)
         </label>
+
+        <input
+          className="w-full border rounded-lg p-2"
+          type="number"
+          min={0}
+          value={Number(event.featured_rank ?? 0)}
+          onChange={(e) => setEvent({ ...event, featured_rank: Number(e.target.value) })}
+          placeholder="Ordre Premium (1,2,3...)"
+        />
 
         <button className="w-full bg-black text-white py-2 rounded-lg" type="submit">
           Enregistrer
