@@ -7,17 +7,39 @@ import { useParams, useRouter } from "next/navigation";
 type EventItem = {
   id: string;
   title: string | null;
-  date: string | null;
-  time: string | null;
   location: string | null;
   image: string | null;
   whatsapp: string | null;
   is_featured: boolean | null;
+
+  // nouveaux champs
+  event_date: string | null; // YYYY-MM-DD
+  event_time: string | null; // HH:MM:SS ou HH:MM
 };
 
 function normalizePhoneToWa(phone: string) {
   const cleaned = phone.replace(/[^\d+]/g, "");
   return cleaned.startsWith("+") ? cleaned.slice(1) : cleaned;
+}
+
+function parseEventDate(dateStr: string | null): Date | null {
+  if (!dateStr) return null;
+  const d = new Date(dateStr + "T00:00:00");
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function formatDateFr(d: Date) {
+  return new Intl.DateTimeFormat("fr-FR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(d);
+}
+
+function formatTimeHM(t: string | null) {
+  if (!t) return "";
+  return t.slice(0, 5); // HH:MM
 }
 
 export default function EventDetailPage() {
@@ -58,10 +80,14 @@ export default function EventDetailPage() {
 
   const shareText = useMemo(() => {
     if (!event) return "";
+
+    const d = parseEventDate(event.event_date);
+    const dateTxt = d ? formatDateFr(d) : "Date ?";
+    const timeTxt = formatTimeHM(event.event_time);
+
     const parts = [
       event.title ?? "Événement",
-      event.date ? `📅 ${event.date}` : "",
-      event.time ? `⏰ ${event.time}` : "",
+      `📅 ${dateTxt}${timeTxt ? ` • ⏰ ${timeTxt}` : ""}`,
       event.location ? `📍 ${event.location}` : "",
       "",
       "👉 Détails ici : " + (typeof window !== "undefined" ? window.location.href : ""),
@@ -77,22 +103,19 @@ export default function EventDetailPage() {
     const title = event.title ?? "Événement";
     const text = shareText;
 
-    // Partage natif (mobile) si dispo
-    if (navigator.share) {
+    if ((navigator as any).share) {
       try {
-        await navigator.share({ title, text, url });
+        await (navigator as any).share({ title, text, url });
         return;
       } catch {
-        // si l’utilisateur annule, on ne fait rien
+        // annulé -> rien
       }
     }
 
-    // fallback: copier dans le presse-papier
     try {
       await navigator.clipboard.writeText(text);
       alert("✅ Lien copié ! Tu peux le coller sur WhatsApp.");
     } catch {
-      // fallback ultime
       prompt("Copie ce texte :", text);
     }
   };
@@ -120,6 +143,10 @@ export default function EventDetailPage() {
       </main>
     );
   }
+
+  const d = parseEventDate(event.event_date);
+  const dateTxt = d ? formatDateFr(d) : "Date ?";
+  const timeTxt = formatTimeHM(event.event_time);
 
   const waLink =
     event.whatsapp
@@ -167,9 +194,9 @@ export default function EventDetailPage() {
         <h1 className="text-2xl font-bold">{event.title ?? "Sans titre"}</h1>
 
         <div className="mt-3 space-y-1 text-sm">
-          <p>{event.date ? `📅 ${event.date}` : "📅 Date ?"}</p>
-          <p>{event.time ? `⏰ ${event.time}` : "⏰ Heure ?"}</p>
-          <p>{event.location ? `📍 ${event.location}` : "📍 Lieu ?"}</p>
+          <p>📅 {dateTxt}</p>
+          <p>⏰ {timeTxt || "Heure ?"}</p>
+          <p>📍 {event.location ?? "Lieu ?"}</p>
         </div>
 
         {/* Actions */}
@@ -199,10 +226,6 @@ export default function EventDetailPage() {
             Partager
           </button>
         </div>
-
-        <p className="text-xs text-gray-500 mt-4">
-          Astuce : partage ce lien dans un groupe WhatsApp pour inviter tes amis.
-        </p>
       </div>
     </main>
   );
