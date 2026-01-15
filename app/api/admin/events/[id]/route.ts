@@ -1,19 +1,23 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { supabaseAdmin } from "../../../../../lib/supabaseAdmin";
-
-type Ctx = { params: Promise<{ id: string }> };
 
 function requireAdmin() {
   return cookies().get("admin_auth")?.value === "1";
 }
 
-export async function DELETE(_: Request, { params }: Ctx) {
+function getIdFromPath(req: NextRequest) {
+  // /api/admin/events/<id>
+  const parts = req.nextUrl.pathname.split("/");
+  return parts[parts.length - 1]; // dernier segment
+}
+
+export async function DELETE(req: NextRequest) {
   if (!requireAdmin()) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = await params;
+  const id = getIdFromPath(req);
 
   const { error } = await supabaseAdmin.from("events").delete().eq("id", id);
   if (error) {
@@ -23,12 +27,12 @@ export async function DELETE(_: Request, { params }: Ctx) {
   return NextResponse.json({ ok: true });
 }
 
-export async function PATCH(req: Request, { params }: Ctx) {
+export async function PATCH(req: NextRequest) {
   if (!requireAdmin()) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = await params;
+  const id = getIdFromPath(req);
 
   const body = await req.json().catch(() => ({}));
 
