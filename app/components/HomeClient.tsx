@@ -9,14 +9,20 @@ type EventItem = {
   location: string | null;
   image: string | null;
   whatsapp: string | null;
+
   is_featured: boolean | null;
   featured_rank: number | null;
+
   event_date: string | null; // YYYY-MM-DD
   event_time: string | null; // HH:MM:SS ou HH:MM
+
+  description: string | null;
+  interest_count: number | null;
+
   created_at?: string | null;
 };
 
-type Filter = "TOUT" | "AUJOURD_HUI" | "WEEK_END";
+type Filter = "TOUT" | "AUJOURD_HUI" | "WEEK_END" | "POPULAIRES";
 
 function normalizePhoneToWa(phone: string) {
   const cleaned = phone.replace(/[^\d+]/g, "");
@@ -55,12 +61,12 @@ function getWeekendRange(now: Date) {
   const start = new Date(now);
   start.setHours(0, 0, 0, 0);
 
-  // ramener au vendredi du week-end courant si ven/sam/dim
+  // si ven/sam/dim => week-end courant
   if (day === 5 || day === 6 || day === 0) {
     const offsetToFriday = day === 0 ? -2 : day === 6 ? -1 : 0;
     start.setDate(now.getDate() + offsetToFriday);
   } else {
-    // sinon aller au prochain vendredi
+    // sinon prochain vendredi
     start.setDate(now.getDate() + (5 - day));
   }
 
@@ -72,14 +78,17 @@ function getWeekendRange(now: Date) {
 }
 
 function Logo() {
+  // Proposition 1 : nightlife / sorties (ticket + étoile en style minimal)
   return (
     <div className="flex items-center gap-3">
       <div className="h-10 w-10 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center">
-        <span className="font-bold text-white">B</span>
+        <span className="text-white text-lg">🎟️</span>
       </div>
       <div className="leading-tight">
-        <div className="text-white font-semibold text-lg">Bingo</div>
-        <div className="text-white/60 text-xs">Sorties & bons plans</div>
+        <div className="text-white font-semibold text-lg flex items-center gap-2">
+          Bingo <span className="text-white/60 text-sm">✦</span>
+        </div>
+        <div className="text-white/60 text-xs">Sorties & nightlife</div>
       </div>
     </div>
   );
@@ -116,6 +125,7 @@ export default function HomeClient({ showAdmin }: { showAdmin: boolean }) {
     loadEvents();
   }, []);
 
+  // Premium trié par featured_rank puis date
   const featured = useMemo(() => {
     const list = events.filter((e) => e.is_featured);
     return list.sort((a, b) => {
@@ -129,10 +139,26 @@ export default function HomeClient({ showAdmin }: { showAdmin: boolean }) {
     });
   }, [events]);
 
+  // Populaires trié par intérêt desc, puis date
+  const popular = useMemo(() => {
+    const list = [...events];
+    return list.sort((a, b) => {
+      const ia = a.interest_count ?? 0;
+      const ib = b.interest_count ?? 0;
+      if (ia !== ib) return ib - ia;
+
+      const da = parseEventDate(a)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+      const db = parseEventDate(b)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+      return da - db;
+    });
+  }, [events]);
+
   const filtered = useMemo(() => {
+    const now = new Date();
+
     if (filter === "TOUT") return events;
 
-    const now = new Date();
+    if (filter === "POPULAIRES") return popular;
 
     if (filter === "AUJOURD_HUI") {
       return events.filter((e) => {
@@ -152,7 +178,7 @@ export default function HomeClient({ showAdmin }: { showAdmin: boolean }) {
     }
 
     return events;
-  }, [events, filter]);
+  }, [events, filter, popular]);
 
   const EventCard = ({ event }: { event: EventItem }) => {
     const d = parseEventDate(event);
@@ -178,11 +204,20 @@ export default function HomeClient({ showAdmin }: { showAdmin: boolean }) {
             <h2 className="font-semibold text-white">
               {event.title ?? "Sans titre"}
             </h2>
-            {event.is_featured && (
-              <span className="text-[11px] px-2 py-1 rounded-full bg-white/10 text-white border border-white/10">
-                Premium
-              </span>
-            )}
+
+            <div className="flex items-center gap-2">
+              {(event.interest_count ?? 0) > 0 && (
+                <span className="text-[11px] px-2 py-1 rounded-full bg-white/10 text-white border border-white/10">
+                  ❤️ {event.interest_count}
+                </span>
+              )}
+
+              {event.is_featured && (
+                <span className="text-[11px] px-2 py-1 rounded-full bg-white/10 text-white border border-white/10">
+                  Premium
+                </span>
+              )}
+            </div>
           </div>
 
           <p className="text-sm text-white/70 mt-1">
@@ -251,14 +286,14 @@ export default function HomeClient({ showAdmin }: { showAdmin: boolean }) {
           )}
         </div>
 
-        {/* Petite accroche */}
+        {/* Hero + filtres */}
         <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4">
           <div className="text-white font-semibold">Qu’est-ce qu’on fait ce soir ?</div>
           <div className="text-white/70 text-sm mt-1">
             Découvre les meilleures sorties à Lomé : soirées, concerts, vibes.
           </div>
 
-          <div className="flex gap-2 mt-4">
+          <div className="flex gap-2 mt-4 flex-wrap">
             <button
               className={`px-3 py-2 rounded-xl text-sm border ${
                 filter === "TOUT"
@@ -269,6 +304,7 @@ export default function HomeClient({ showAdmin }: { showAdmin: boolean }) {
             >
               Tout
             </button>
+
             <button
               className={`px-3 py-2 rounded-xl text-sm border ${
                 filter === "AUJOURD_HUI"
@@ -279,6 +315,7 @@ export default function HomeClient({ showAdmin }: { showAdmin: boolean }) {
             >
               Aujourd’hui
             </button>
+
             <button
               className={`px-3 py-2 rounded-xl text-sm border ${
                 filter === "WEEK_END"
@@ -289,13 +326,25 @@ export default function HomeClient({ showAdmin }: { showAdmin: boolean }) {
             >
               Week-end
             </button>
+
+            <button
+              className={`px-3 py-2 rounded-xl text-sm border ${
+                filter === "POPULAIRES"
+                  ? "bg-white text-black border-white"
+                  : "border-white/20 text-white"
+              }`}
+              onClick={() => setFilter("POPULAIRES")}
+            >
+              Populaires ❤️
+            </button>
           </div>
         </div>
 
         {loading && <p className="text-white/70 mt-5">Chargement...</p>}
         {errorMsg && <p className="text-sm text-red-400 mt-5">Erreur: {errorMsg}</p>}
 
-        {!loading && !errorMsg && featured.length > 0 && (
+        {/* Premium section: affichée quand on est sur Tout / Aujourd'hui / Week-end (pas Populaires) */}
+        {!loading && !errorMsg && filter !== "POPULAIRES" && featured.length > 0 && (
           <>
             <h2 className="font-semibold text-white mt-7 mb-3">🔥 En avant</h2>
             <div className="grid gap-4">
@@ -308,7 +357,9 @@ export default function HomeClient({ showAdmin }: { showAdmin: boolean }) {
 
         {!loading && !errorMsg && (
           <>
-            <h2 className="font-semibold text-white mt-7 mb-3">Tous les événements</h2>
+            <h2 className="font-semibold text-white mt-7 mb-3">
+              {filter === "POPULAIRES" ? "Les plus populaires" : "Tous les événements"}
+            </h2>
 
             {filtered.length === 0 ? (
               <p className="text-white/70">Aucun événement.</p>
