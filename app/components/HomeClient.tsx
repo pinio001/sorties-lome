@@ -78,16 +78,14 @@ function getWeekendRange(now: Date) {
 }
 
 function Logo() {
-  // Proposition 1 : nightlife / sorties (ticket + étoile en style minimal)
   return (
     <div className="flex items-center gap-3">
-      <div className="h-10 w-10 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center">
-        <span className="text-white text-lg">🎟️</span>
+      <div className="h-10 w-10 rounded-2xl bg-white text-black flex items-center justify-center shadow">
+        <span className="font-black text-xl tracking-tight">B</span>
       </div>
+
       <div className="leading-tight">
-        <div className="text-white font-semibold text-lg flex items-center gap-2">
-          Bingo <span className="text-white/60 text-sm">✦</span>
-        </div>
+        <div className="text-white font-semibold text-lg">Bingo</div>
         <div className="text-white/60 text-xs">Sorties & nightlife</div>
       </div>
     </div>
