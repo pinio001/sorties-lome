@@ -41,14 +41,17 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
 
   const allowed = [
-    "title",
-    "date",
-    "time",
-    "location",
-    "image",
-    "whatsapp",
-    "is_featured",
-  ];
+  "title",
+  "location",
+  "image",
+  "whatsapp",
+  "is_featured",
+  "featured_rank",
+  "event_date",
+  "event_time",
+  "description",
+];
+
 
   const update: Record<string, any> = {};
   for (const key of allowed) {
