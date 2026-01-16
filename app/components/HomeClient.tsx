@@ -25,24 +25,21 @@ function normalizePhoneToWa(phone: string) {
 
 function parseEventDate(e: EventItem): Date | null {
   if (!e.event_date) return null;
-  // event_date = YYYY-MM-DD
   const d = new Date(e.event_date + "T00:00:00");
   return isNaN(d.getTime()) ? null : d;
 }
 
 function formatDateFr(d: Date) {
-  // ex: "samedi 10 mars 2026"
   return new Intl.DateTimeFormat("fr-FR", {
     weekday: "long",
     day: "2-digit",
     month: "long",
-    year: "numeric",
   }).format(d);
 }
 
 function formatTimeHM(t: string | null) {
   if (!t) return "";
-  return t.slice(0, 5); // HH:MM
+  return t.slice(0, 5);
 }
 
 function sameDay(a: Date, b: Date) {
@@ -54,34 +51,38 @@ function sameDay(a: Date, b: Date) {
 }
 
 function getWeekendRange(now: Date) {
-  // On définit le week-end = vendredi/samedi/dimanche
-  // On prend le prochain vendredi (ou aujourd’hui si on est déjà ven/sam/dim)
   const day = now.getDay(); // 0 dim, 5 ven
-  const daysUntilFriday = day <= 5 ? 5 - day : 6; // si samedi (6) -> 6 jours jusqu’au prochain vendredi
   const start = new Date(now);
   start.setHours(0, 0, 0, 0);
-  start.setDate(now.getDate() + daysUntilFriday);
 
-  const end = new Date(start);
-  end.setDate(start.getDate() + 2); // vendredi + 2 = dimanche
-  end.setHours(23, 59, 59, 999);
-
-  // Si on est déjà vendredi/samedi/dimanche, on prend ce week-end
+  // ramener au vendredi du week-end courant si ven/sam/dim
   if (day === 5 || day === 6 || day === 0) {
-    const thisStart = new Date(now);
-    thisStart.setHours(0, 0, 0, 0);
-    // ramener au vendredi de ce week-end
     const offsetToFriday = day === 0 ? -2 : day === 6 ? -1 : 0;
-    thisStart.setDate(now.getDate() + offsetToFriday);
-
-    const thisEnd = new Date(thisStart);
-    thisEnd.setDate(thisStart.getDate() + 2);
-    thisEnd.setHours(23, 59, 59, 999);
-
-    return { start: thisStart, end: thisEnd };
+    start.setDate(now.getDate() + offsetToFriday);
+  } else {
+    // sinon aller au prochain vendredi
+    start.setDate(now.getDate() + (5 - day));
   }
 
+  const end = new Date(start);
+  end.setDate(start.getDate() + 2);
+  end.setHours(23, 59, 59, 999);
+
   return { start, end };
+}
+
+function Logo() {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="h-10 w-10 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center">
+        <span className="font-bold text-white">B</span>
+      </div>
+      <div className="leading-tight">
+        <div className="text-white font-semibold text-lg">Bingo</div>
+        <div className="text-white/60 text-xs">Sorties & bons plans</div>
+      </div>
+    </div>
+  );
 }
 
 export default function HomeClient({ showAdmin }: { showAdmin: boolean }) {
@@ -117,7 +118,6 @@ export default function HomeClient({ showAdmin }: { showAdmin: boolean }) {
 
   const featured = useMemo(() => {
     const list = events.filter((e) => e.is_featured);
-    // tri Premium: featured_rank asc, puis date asc
     return list.sort((a, b) => {
       const ra = a.featured_rank ?? 0;
       const rb = b.featured_rank ?? 0;
@@ -160,45 +160,47 @@ export default function HomeClient({ showAdmin }: { showAdmin: boolean }) {
     const timeText = formatTimeHM(event.event_time);
 
     return (
-      <div className="rounded-xl shadow overflow-hidden bg-white">
+      <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur">
         {event.image ? (
           <img
             src={event.image}
             alt={event.title ?? "Événement"}
-            className="w-full h-48 object-cover"
+            className="w-full h-44 object-cover"
           />
         ) : (
-          <div className="w-full h-48 flex items-center justify-center bg-gray-100">
-            <span className="text-sm text-gray-500">Pas d’image</span>
+          <div className="w-full h-44 flex items-center justify-center bg-white/5">
+            <span className="text-sm text-white/50">Pas d’image</span>
           </div>
         )}
 
-        <div className="p-3">
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="font-semibold">{event.title ?? "Sans titre"}</h2>
+        <div className="p-4">
+          <div className="flex items-start justify-between gap-2">
+            <h2 className="font-semibold text-white">
+              {event.title ?? "Sans titre"}
+            </h2>
             {event.is_featured && (
-              <span className="text-xs px-2 py-1 rounded-full bg-black text-white">
+              <span className="text-[11px] px-2 py-1 rounded-full bg-white/10 text-white border border-white/10">
                 Premium
               </span>
             )}
           </div>
 
-          <p className="text-sm">
+          <p className="text-sm text-white/70 mt-1">
             {dateText} {timeText ? `• ${timeText}` : ""}
           </p>
-          <p className="text-sm text-gray-600">{event.location ?? "Lieu ?"}</p>
+          <p className="text-sm text-white/60">{event.location ?? "Lieu ?"}</p>
 
-          <div className="mt-3 flex gap-2">
+          <div className="mt-4 flex gap-2">
             <a
               href={`/event/${event.id}`}
-              className="flex-1 text-center bg-black text-white py-2 rounded-lg"
+              className="flex-1 text-center bg-white text-black py-2 rounded-xl font-medium"
             >
-              Voir détails
+              Détails
             </a>
 
             {event.whatsapp ? (
               <a
-                className="flex-1 text-center border border-black py-2 rounded-lg"
+                className="flex-1 text-center border border-white/20 text-white py-2 rounded-xl"
                 href={`https://wa.me/${normalizePhoneToWa(event.whatsapp)}?text=${encodeURIComponent(
                   `Bonsoir, je veux des infos pour: ${event.title ?? "cet événement"}`
                 )}`}
@@ -209,7 +211,7 @@ export default function HomeClient({ showAdmin }: { showAdmin: boolean }) {
               </a>
             ) : (
               <button
-                className="flex-1 text-center border border-gray-300 py-2 rounded-lg text-gray-400 cursor-not-allowed"
+                className="flex-1 text-center border border-white/10 text-white/40 py-2 rounded-xl cursor-not-allowed"
                 disabled
               >
                 WhatsApp
@@ -222,76 +224,104 @@ export default function HomeClient({ showAdmin }: { showAdmin: boolean }) {
   };
 
   return (
-    <main className="p-4 max-w-md mx-auto">
-      <div className="flex items-center justify-between gap-2 mb-4">
-        <h1 className="text-2xl font-bold">Sorties à Lomé</h1>
-
-        {showAdmin && (
-          <a
-            href="/admin"
-            className="text-sm border border-black px-3 py-1 rounded-lg"
-          >
-            + Ajouter
-          </a>
-        )}
+    <main className="min-h-screen">
+      {/* Fond noir + dégradé bleu foncé */}
+      <div className="fixed inset-0 -z-10 bg-black">
+        <div
+          className="absolute inset-0 opacity-80"
+          style={{
+            background:
+              "radial-gradient(600px 600px at 20% 10%, rgba(30,58,138,0.55), transparent 60%), radial-gradient(700px 700px at 90% 20%, rgba(2,6,23,0.6), transparent 55%), linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,1))",
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/0 via-white/0 to-black" />
       </div>
 
-      <div className="flex gap-2 mb-4">
-        <button
-          className={`px-3 py-2 rounded-lg text-sm border ${
-            filter === "TOUT" ? "bg-black text-white border-black" : "border-gray-300"
-          }`}
-          onClick={() => setFilter("TOUT")}
-        >
-          Tout
-        </button>
-        <button
-          className={`px-3 py-2 rounded-lg text-sm border ${
-            filter === "AUJOURD_HUI" ? "bg-black text-white border-black" : "border-gray-300"
-          }`}
-          onClick={() => setFilter("AUJOURD_HUI")}
-        >
-          Aujourd’hui
-        </button>
-        <button
-          className={`px-3 py-2 rounded-lg text-sm border ${
-            filter === "WEEK_END" ? "bg-black text-white border-black" : "border-gray-300"
-          }`}
-          onClick={() => setFilter("WEEK_END")}
-        >
-          Week-end
-        </button>
-      </div>
+      <div className="max-w-md mx-auto px-4 pt-6 pb-10">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <Logo />
+          {showAdmin && (
+            <a
+              href="/admin"
+              className="text-sm text-white border border-white/20 px-3 py-2 rounded-xl"
+            >
+              + Ajouter
+            </a>
+          )}
+        </div>
 
-      {loading && <p>Chargement...</p>}
-      {errorMsg && <p className="text-sm text-red-600">Erreur: {errorMsg}</p>}
-
-      {!loading && !errorMsg && featured.length > 0 && (
-        <>
-          <h2 className="font-semibold mb-2">🔥 En avant</h2>
-          <div className="grid gap-4 mb-6">
-            {featured.slice(0, 6).map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
+        {/* Petite accroche */}
+        <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="text-white font-semibold">Qu’est-ce qu’on fait ce soir ?</div>
+          <div className="text-white/70 text-sm mt-1">
+            Découvre les meilleures sorties à Lomé : soirées, concerts, vibes.
           </div>
-        </>
-      )}
 
-      {!loading && !errorMsg && (
-        <>
-          <h2 className="font-semibold mb-2">Tous les événements</h2>
+          <div className="flex gap-2 mt-4">
+            <button
+              className={`px-3 py-2 rounded-xl text-sm border ${
+                filter === "TOUT"
+                  ? "bg-white text-black border-white"
+                  : "border-white/20 text-white"
+              }`}
+              onClick={() => setFilter("TOUT")}
+            >
+              Tout
+            </button>
+            <button
+              className={`px-3 py-2 rounded-xl text-sm border ${
+                filter === "AUJOURD_HUI"
+                  ? "bg-white text-black border-white"
+                  : "border-white/20 text-white"
+              }`}
+              onClick={() => setFilter("AUJOURD_HUI")}
+            >
+              Aujourd’hui
+            </button>
+            <button
+              className={`px-3 py-2 rounded-xl text-sm border ${
+                filter === "WEEK_END"
+                  ? "bg-white text-black border-white"
+                  : "border-white/20 text-white"
+              }`}
+              onClick={() => setFilter("WEEK_END")}
+            >
+              Week-end
+            </button>
+          </div>
+        </div>
 
-          {filtered.length === 0 ? (
-            <p>Aucun événement.</p>
-          ) : (
+        {loading && <p className="text-white/70 mt-5">Chargement...</p>}
+        {errorMsg && <p className="text-sm text-red-400 mt-5">Erreur: {errorMsg}</p>}
+
+        {!loading && !errorMsg && featured.length > 0 && (
+          <>
+            <h2 className="font-semibold text-white mt-7 mb-3">🔥 En avant</h2>
             <div className="grid gap-4">
-              {filtered.map((event) => (
+              {featured.slice(0, 6).map((event) => (
                 <EventCard key={event.id} event={event} />
               ))}
             </div>
-          )}
-        </>
-      )}
+          </>
+        )}
+
+        {!loading && !errorMsg && (
+          <>
+            <h2 className="font-semibold text-white mt-7 mb-3">Tous les événements</h2>
+
+            {filtered.length === 0 ? (
+              <p className="text-white/70">Aucun événement.</p>
+            ) : (
+              <div className="grid gap-4">
+                {filtered.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </main>
   );
 }
