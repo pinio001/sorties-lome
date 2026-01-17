@@ -4,6 +4,7 @@ import { useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 
+
 export default function AdminPage() {
   const router = useRouter();
 
@@ -54,6 +55,8 @@ export default function AdminPage() {
   return (
     <main className="p-4 max-w-md mx-auto">
       <h1 className="text-2xl font-bold mb-2">Admin — Ajouter un événement</h1>
+      <a href="/admin/places" className="underline">Admin Places</a>
+      <a href="/admin/places/manage" className="underline">Gérer Places</a>
 
       <a className="text-sm underline" href="/admin/manage">
         Gérer les événements (modifier / supprimer)
