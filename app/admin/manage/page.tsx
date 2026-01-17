@@ -51,6 +51,7 @@ export default function ManageEventsPage() {
     <main className="p-4 max-w-md mx-auto">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold">Gérer les événements</h1>
+        <a href="/admin/places" className="underline">Admin Places</a>
         <a href="/admin/places/manage" className="underline">Gérer Places</a>
 
         <a className="text-sm border border-black px-3 py-1 rounded-lg" href="/admin">
