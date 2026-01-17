@@ -1,9 +1,44 @@
-import { cookies } from "next/headers";
-import HomeClient from "./components/HomeClient";
+"use client";
 
-export default async function Page() {
-  const cookieStore = await cookies();
-  const isAdmin = cookieStore.get("admin_auth")?.value === "1";
+import Link from "next/link";
 
-  return <HomeClient showAdmin={isAdmin} />;
+export default function HomePage() {
+  return (
+    <main className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="max-w-sm w-full px-6">
+        {/* Logo */}
+        <div className="flex flex-col items-center mb-10">
+          <div className="w-14 h-14 rounded-full bg-white text-black flex items-center justify-center text-3xl font-extrabold">
+            B
+          </div>
+          <h1 className="text-2xl font-bold mt-4">Bingo</h1>
+          <p className="text-white/70 text-sm mt-1">
+            Sorties & lieux à Lomé
+          </p>
+        </div>
+
+        {/* Buttons */}
+        <div className="flex flex-col gap-4">
+          <Link
+            href="/events"
+            className="block text-center bg-white text-black py-4 rounded-2xl text-lg font-semibold"
+          >
+            🎉 Voir les Events
+          </Link>
+
+          <Link
+            href="/places"
+            className="block text-center border border-white/30 py-4 rounded-2xl text-lg font-semibold"
+          >
+            📍 Découvrir les Places
+          </Link>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-xs text-white/40 mt-10">
+          Bingo © {new Date().getFullYear()}
+        </p>
+      </div>
+    </main>
+  );
 }
