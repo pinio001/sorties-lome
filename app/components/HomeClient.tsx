@@ -1,46 +1,36 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
+import Link from "next/link";
+import BingoBackground from "./BingoBackground";
+
+/* ================= TYPES ================= */
 
 type EventItem = {
   id: string;
   title: string | null;
   location: string | null;
   image: string | null;
+  event_date: string | null;
+  event_time: string | null;
   whatsapp: string | null;
-
-  is_featured: boolean | null;
-  featured_rank: number | null;
-
-  event_date: string | null; // YYYY-MM-DD
-  event_time: string | null; // HH:MM:SS ou HH:MM
-
-  description: string | null;
   interest_count: number | null;
-
-  created_at?: string | null;
+  is_featured: boolean;
 };
 
-type Filter = "TOUT" | "AUJOURD_HUI" | "WEEK_END" | "POPULAIRES";
+/* ================= HELPERS ================= */
 
-function normalizePhoneToWa(phone: string) {
-  const cleaned = phone.replace(/[^\d+]/g, "");
-  return cleaned.startsWith("+") ? cleaned.slice(1) : cleaned;
-}
-
-function parseEventDate(e: EventItem): Date | null {
-  if (!e.event_date) return null;
-  const d = new Date(e.event_date + "T00:00:00");
-  return isNaN(d.getTime()) ? null : d;
+function parseEventDate(event: EventItem) {
+  if (!event.event_date) return null;
+  return new Date(event.event_date);
 }
 
 function formatDateFr(d: Date) {
-  return new Intl.DateTimeFormat("fr-FR", {
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-  }).format(d);
+  return d.toLocaleDateString("fr-FR", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
 }
 
 function formatTimeHM(t: string | null) {
@@ -48,329 +38,201 @@ function formatTimeHM(t: string | null) {
   return t.slice(0, 5);
 }
 
-function sameDay(a: Date, b: Date) {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
+function normalizePhoneToWa(phone: string) {
+  return phone.replace(/\D/g, "");
 }
 
-function getWeekendRange(now: Date) {
-  const day = now.getDay(); // 0 dim, 5 ven
-  const start = new Date(now);
-  start.setHours(0, 0, 0, 0);
-
-  // si ven/sam/dim => week-end courant
-  if (day === 5 || day === 6 || day === 0) {
-    const offsetToFriday = day === 0 ? -2 : day === 6 ? -1 : 0;
-    start.setDate(now.getDate() + offsetToFriday);
-  } else {
-    // sinon prochain vendredi
-    start.setDate(now.getDate() + (5 - day));
-  }
-
-  const end = new Date(start);
-  end.setDate(start.getDate() + 2);
-  end.setHours(23, 59, 59, 999);
-
-  return { start, end };
-}
+/* ================= UI ================= */
 
 function Logo() {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3 animate-fade-in">
       <div className="h-10 w-10 rounded-2xl bg-white text-black flex items-center justify-center shadow">
         <span className="font-black text-xl tracking-tight">B</span>
       </div>
 
       <div className="leading-tight">
         <div className="text-white font-semibold text-lg">Bingo</div>
-        <div className="text-white/60 text-xs">Sorties & nightlife</div>
+        <div className="text-white/60 text-xs">Events</div>
       </div>
     </div>
   );
 }
 
-export default function HomeClient({ showAdmin }: { showAdmin: boolean }) {
+/* ================= MAIN ================= */
+
+const HomeClient = ({ showAdmin }: { showAdmin: boolean }) => {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [filter, setFilter] = useState<Filter>("TOUT");
 
   useEffect(() => {
-    const loadEvents = async () => {
-      setLoading(true);
-      setErrorMsg(null);
-
-      const { data, error } = await supabase
-        .from("events")
-        .select("*")
-        .order("event_date", { ascending: true, nullsFirst: false })
-        .order("event_time", { ascending: true, nullsFirst: false })
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        setErrorMsg(error.message);
-        setEvents([]);
-      } else {
-        setEvents((data ?? []) as any);
-      }
-
-      setLoading(false);
-    };
-
-    loadEvents();
+    fetch("/api/events")
+      .then((r) => r.json())
+      .then((d) => {
+        setEvents(d.events || []);
+        setLoading(false);
+      });
   }, []);
 
-  // Premium trié par featured_rank puis date
-  const featured = useMemo(() => {
-    const list = events.filter((e) => e.is_featured);
-    return list.sort((a, b) => {
-      const ra = a.featured_rank ?? 0;
-      const rb = b.featured_rank ?? 0;
-      if (ra !== rb) return ra - rb;
-
-      const da = parseEventDate(a)?.getTime() ?? Number.MAX_SAFE_INTEGER;
-      const db = parseEventDate(b)?.getTime() ?? Number.MAX_SAFE_INTEGER;
-      return da - db;
-    });
-  }, [events]);
-
-  // Populaires trié par intérêt desc, puis date
-  const popular = useMemo(() => {
-    const list = [...events];
-    return list.sort((a, b) => {
-      const ia = a.interest_count ?? 0;
-      const ib = b.interest_count ?? 0;
-      if (ia !== ib) return ib - ia;
-
-      const da = parseEventDate(a)?.getTime() ?? Number.MAX_SAFE_INTEGER;
-      const db = parseEventDate(b)?.getTime() ?? Number.MAX_SAFE_INTEGER;
-      return da - db;
-    });
-  }, [events]);
-
-  const filtered = useMemo(() => {
-    const now = new Date();
-
-    if (filter === "TOUT") return events;
-
-    if (filter === "POPULAIRES") return popular;
-
-    if (filter === "AUJOURD_HUI") {
-      return events.filter((e) => {
-        const d = parseEventDate(e);
-        return d ? sameDay(d, now) : false;
-      });
-    }
-
-    if (filter === "WEEK_END") {
-      const { start, end } = getWeekendRange(now);
-      return events.filter((e) => {
-        const d = parseEventDate(e);
-        if (!d) return false;
-        const t = d.getTime();
-        return t >= start.getTime() && t <= end.getTime();
-      });
-    }
-
-    return events;
-  }, [events, filter, popular]);
-
-  const EventCard = ({ event }: { event: EventItem }) => {
-    const d = parseEventDate(event);
-    const dateText = d ? formatDateFr(d) : "Date ?";
-    const timeText = formatTimeHM(event.event_time);
-
-    return (
-      <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur">
-        {event.image ? (
-          <img
-            src={event.image}
-            alt={event.title ?? "Événement"}
-            className="w-full h-44 object-cover"
-          />
-        ) : (
-          <div className="w-full h-44 flex items-center justify-center bg-white/5">
-            <span className="text-sm text-white/50">Pas d’image</span>
-          </div>
-        )}
-
-        <div className="p-4">
-          <div className="flex items-start justify-between gap-2">
-            <h2 className="font-semibold text-white">
-              {event.title ?? "Sans titre"}
-            </h2>
-
-            <div className="flex items-center gap-2">
-              {(event.interest_count ?? 0) > 0 && (
-                <span className="text-[11px] px-2 py-1 rounded-full bg-white/10 text-white border border-white/10">
-                  ❤️ {event.interest_count}
-                </span>
-              )}
-
-              {event.is_featured && (
-                <span className="text-[11px] px-2 py-1 rounded-full bg-white/10 text-white border border-white/10">
-                  Premium
-                </span>
-              )}
-            </div>
-          </div>
-
-          <p className="text-sm text-white/70 mt-1">
-            {dateText} {timeText ? `• ${timeText}` : ""}
-          </p>
-          <p className="text-sm text-white/60">{event.location ?? "Lieu ?"}</p>
-
-          <div className="mt-4 flex gap-2">
-            <a
-              href={`/event/${event.id}`}
-              className="flex-1 text-center bg-white text-black py-2 rounded-xl font-medium"
-            >
-              Détails
-            </a>
-
-            {event.whatsapp ? (
-              <a
-                className="flex-1 text-center border border-white/20 text-white py-2 rounded-xl"
-                href={`https://wa.me/${normalizePhoneToWa(event.whatsapp)}?text=${encodeURIComponent(
-                  `Bonsoir, je veux des infos pour: ${event.title ?? "cet événement"}`
-                )}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                WhatsApp
-              </a>
-            ) : (
-              <button
-                className="flex-1 text-center border border-white/10 text-white/40 py-2 rounded-xl cursor-not-allowed"
-                disabled
-              >
-                WhatsApp
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
+  const featured = useMemo(
+    () => events.filter((e) => e.is_featured),
+    [events]
+  );
 
   return (
-    <main className="min-h-screen">
-      {/* Fond noir + dégradé bleu foncé */}
-      <div className="fixed inset-0 -z-10 bg-black">
-        <div
-          className="absolute inset-0 opacity-80"
-          style={{
-            background:
-              "radial-gradient(600px 600px at 20% 10%, rgba(30,58,138,0.55), transparent 60%), radial-gradient(700px 700px at 90% 20%, rgba(2,6,23,0.6), transparent 55%), linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,1))",
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-white/0 via-white/0 to-black" />
-      </div>
+    <main className="min-h-screen relative">
+      <BingoBackground />
 
       <div className="max-w-md mx-auto px-4 pt-6 pb-10">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-5">
           <Logo />
-          {showAdmin && (
-            <a
-              href="/admin"
-              className="text-sm text-white border border-white/20 px-3 py-2 rounded-xl"
-            >
-              + Ajouter
-            </a>
-          )}
+          <Link
+            href="/places"
+            className="text-sm text-white border border-white/20 px-3 py-2 rounded-xl transition hover:bg-white/10 hover:scale-[1.03]"
+          >
+            → Places
+          </Link>
         </div>
 
-        {/* Hero + filtres */}
-        <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4">
-          <div className="text-white font-semibold">Qu’est-ce qu’on fait ce soir ?</div>
+        {/* Hero */}
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 animate-fade-in-up">
+          <div className="text-white font-semibold">
+            Qu’est-ce qu’on fait ce soir ?
+          </div>
           <div className="text-white/70 text-sm mt-1">
             Découvre les meilleures sorties à Lomé : soirées, concerts, vibes.
           </div>
-
-          <div className="flex gap-2 mt-4 flex-wrap">
-            <button
-              className={`px-3 py-2 rounded-xl text-sm border ${
-                filter === "TOUT"
-                  ? "bg-white text-black border-white"
-                  : "border-white/20 text-white"
-              }`}
-              onClick={() => setFilter("TOUT")}
-            >
-              Tout
-            </button>
-
-            <button
-              className={`px-3 py-2 rounded-xl text-sm border ${
-                filter === "AUJOURD_HUI"
-                  ? "bg-white text-black border-white"
-                  : "border-white/20 text-white"
-              }`}
-              onClick={() => setFilter("AUJOURD_HUI")}
-            >
-              Aujourd’hui
-            </button>
-
-            <button
-              className={`px-3 py-2 rounded-xl text-sm border ${
-                filter === "WEEK_END"
-                  ? "bg-white text-black border-white"
-                  : "border-white/20 text-white"
-              }`}
-              onClick={() => setFilter("WEEK_END")}
-            >
-              Week-end
-            </button>
-
-            <button
-              className={`px-3 py-2 rounded-xl text-sm border ${
-                filter === "POPULAIRES"
-                  ? "bg-white text-black border-white"
-                  : "border-white/20 text-white"
-              }`}
-              onClick={() => setFilter("POPULAIRES")}
-            >
-              Populaires ❤️
-            </button>
-          </div>
         </div>
 
-        {loading && <p className="text-white/70 mt-5">Chargement...</p>}
-        {errorMsg && <p className="text-sm text-red-400 mt-5">Erreur: {errorMsg}</p>}
+        {loading && (
+          <p className="text-white/70 mt-5 animate-pulse">Chargement...</p>
+        )}
 
-        {/* Premium section: affichée quand on est sur Tout / Aujourd'hui / Week-end (pas Populaires) */}
-        {!loading && !errorMsg && filter !== "POPULAIRES" && featured.length > 0 && (
+        {/* En avant */}
+        {!loading && featured.length > 0 && (
           <>
-            <h2 className="font-semibold text-white mt-7 mb-3">🔥 En avant</h2>
+            <h2 className="font-semibold text-white mt-7 mb-3 animate-fade-in">
+              🔥 En avant
+            </h2>
             <div className="grid gap-4">
-              {featured.slice(0, 6).map((event) => (
+              {featured.map((event) => (
                 <EventCard key={event.id} event={event} />
               ))}
             </div>
           </>
         )}
 
-        {!loading && !errorMsg && (
+        {/* Tous */}
+        {!loading && (
           <>
-            <h2 className="font-semibold text-white mt-7 mb-3">
-              {filter === "POPULAIRES" ? "Les plus populaires" : "Tous les événements"}
+            <h2 className="font-semibold text-white mt-7 mb-3 animate-fade-in">
+              Tous
             </h2>
-
-            {filtered.length === 0 ? (
-              <p className="text-white/70">Aucun événement.</p>
-            ) : (
-              <div className="grid gap-4">
-                {filtered.map((event) => (
-                  <EventCard key={event.id} event={event} />
-                ))}
-              </div>
-            )}
+            <div className="grid gap-4">
+              {events.map((event) => (
+                <EventCard key={event.id} event={event} />
+              ))}
+            </div>
           </>
         )}
       </div>
     </main>
   );
-}
+};
+
+/* ================= CARD ================= */
+
+const EventCard = ({ event }: { event: EventItem }) => {
+  const d = parseEventDate(event);
+  const dateText = d ? formatDateFr(d) : "Date ?";
+  const timeText = formatTimeHM(event.event_time);
+
+  return (
+    <div
+      className={`
+        rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur
+        transition-all duration-300 ease-out
+        hover:-translate-y-1
+        hover:shadow-[0_25px_50px_rgba(0,0,0,0.45)]
+        ${
+          event.is_featured
+            ? "ring-1 ring-blue-500/30 shadow-[0_0_30px_rgba(59,130,246,0.25)]"
+            : ""
+        }
+      `}
+    >
+      {event.image ? (
+        <img
+          src={event.image}
+          alt={event.title ?? "Événement"}
+          className="w-full h-44 object-cover transition-transform duration-500 hover:scale-[1.05]"
+        />
+      ) : (
+        <div className="w-full h-44 flex items-center justify-center bg-white/5">
+          <span className="text-sm text-white/50">Pas d’image</span>
+        </div>
+      )}
+
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-2">
+          <h2 className="font-semibold text-white">
+            {event.title ?? "Sans titre"}
+          </h2>
+
+          <div className="flex items-center gap-2">
+            {(event.interest_count ?? 0) > 0 && (
+              <span className="text-[11px] px-2 py-1 rounded-full bg-white/10 text-white border border-white/10">
+                ❤️ {event.interest_count}
+              </span>
+            )}
+
+            {event.is_featured && (
+              <span className="text-[11px] px-2 py-1 rounded-full bg-white/10 text-white border border-white/10">
+                Premium
+              </span>
+            )}
+          </div>
+        </div>
+
+        <p className="text-sm text-white/70 mt-1">
+          {dateText} {timeText ? `• ${timeText}` : ""}
+        </p>
+        <p className="text-sm text-white/60">
+          {event.location ?? "Lieu ?"}
+        </p>
+
+        <div className="mt-4 flex gap-2">
+          <a
+            href={`/event/${event.id}`}
+            className="flex-1 text-center bg-white text-black py-2 rounded-xl font-medium transition hover:scale-[1.04]"
+          >
+            Détails
+          </a>
+
+          {event.whatsapp ? (
+            <a
+              className="flex-1 text-center border border-white/20 text-white py-2 rounded-xl transition hover:bg-white/10 hover:scale-[1.04]"
+              href={`https://wa.me/${normalizePhoneToWa(event.whatsapp)}?text=${encodeURIComponent(
+                `Bonsoir, je veux des infos pour: ${event.title ?? "cet événement"}`
+              )}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              WhatsApp
+            </a>
+          ) : (
+            <button
+              className="flex-1 text-center border border-white/10 text-white/40 py-2 rounded-xl cursor-not-allowed"
+              disabled
+            >
+              WhatsApp
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default HomeClient;
