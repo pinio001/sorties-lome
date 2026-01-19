@@ -36,6 +36,7 @@ export default function AdminPlacesPage() {
   const [category, setCategory] = useState<Category>("bar_resto");
   const [location, setLocation] = useState("");
   const [image, setImage] = useState("");
+  const [mediaUrls, setMediaUrls] = useState<string[]>([""]);
   const [whatsapp, setWhatsapp] = useState("");
   const [description, setDescription] = useState("");
   const [isFeatured, setIsFeatured] = useState(false);
@@ -44,6 +45,15 @@ export default function AdminPlacesPage() {
 
   const generateDescription = () => {
     setDescription(generateWhatsAppDescription(name, category, location));
+  };
+
+  const addMediaField = () => {
+    if (mediaUrls.length >= 4) return;
+    setMediaUrls([...mediaUrls, ""]);
+  };
+
+  const removeMediaField = (index: number) => {
+    setMediaUrls(mediaUrls.filter((_, i) => i !== index));
   };
 
   const submit = async () => {
@@ -57,7 +67,7 @@ export default function AdminPlacesPage() {
     try {
       const res = await fetch("/api/admin/places", {
         method: "POST",
-        credentials: "include", // 🔥 OBLIGATOIRE POUR ENVOYER LE COOKIE ADMIN
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
@@ -65,7 +75,8 @@ export default function AdminPlacesPage() {
           name,
           category,
           location: location || null,
-          image: image || null,
+          image: image || null, // fallback
+          media_urls: mediaUrls.filter(Boolean), // ⭐ NOUVEAU
           whatsapp: whatsapp || null,
           description: description || null,
           is_featured: isFeatured,
@@ -84,6 +95,7 @@ export default function AdminPlacesPage() {
       setName("");
       setLocation("");
       setImage("");
+      setMediaUrls([""]);
       setWhatsapp("");
       setDescription("");
       setIsFeatured(false);
@@ -107,14 +119,14 @@ export default function AdminPlacesPage() {
         {/* Form */}
         <div className="mt-6 grid gap-4">
           <input
-            className="rounded-xl p-3 text-black"
+            className="rounded-xl p-3 bg-white text-black"
             placeholder="Nom (ex: Byblos Lounge)"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
 
           <select
-            className="rounded-xl p-3 text-black"
+            className="rounded-xl p-3 bg-white text-black"
             value={category}
             onChange={(e) => setCategory(e.target.value as Category)}
           >
@@ -124,21 +136,57 @@ export default function AdminPlacesPage() {
           </select>
 
           <input
-            className="rounded-xl p-3 text-black"
+            className="rounded-xl p-3 bg-white text-black"
             placeholder="Lieu (ex: Agoè, Downtown...)"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
           />
 
           <input
-            className="rounded-xl p-3 text-black"
-            placeholder="Image (URL)"
+            className="rounded-xl p-3 bg-white text-black"
+            placeholder="Image principale (URL)"
             value={image}
             onChange={(e) => setImage(e.target.value)}
           />
 
+          {/* Médias multiples */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Médias (images / vidéos – max 4)</span>
+              <button
+                type="button"
+                onClick={addMediaField}
+                className="text-sm underline"
+              >
+                + Ajouter
+              </button>
+            </div>
+
+            {mediaUrls.map((url, i) => (
+              <div key={i} className="flex gap-2">
+                <input
+                  className="flex-1 rounded-xl p-3 bg-white text-black"
+                  placeholder={`Média ${i + 1} (URL)`}
+                  value={url}
+                  onChange={(e) => {
+                    const copy = [...mediaUrls];
+                    copy[i] = e.target.value;
+                    setMediaUrls(copy);
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => removeMediaField(i)}
+                  className="text-red-400"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+
           <input
-            className="rounded-xl p-3 text-black"
+            className="rounded-xl p-3 bg-white text-black"
             placeholder="WhatsApp (+228...)"
             value={whatsapp}
             onChange={(e) => setWhatsapp(e.target.value)}
@@ -156,7 +204,7 @@ export default function AdminPlacesPage() {
 
             <input
               type="number"
-              className="w-24 rounded-xl p-2 text-black"
+              className="w-24 rounded-xl p-2 bg-white text-black"
               value={featuredRank}
               onChange={(e) => setFeaturedRank(Number(e.target.value))}
               placeholder="Ordre"
@@ -175,7 +223,7 @@ export default function AdminPlacesPage() {
           </div>
 
           <textarea
-            className="rounded-xl p-3 text-black min-h-[140px]"
+            className="rounded-xl p-3 bg-white text-black min-h-[140px]"
             placeholder="Description WhatsApp"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
