@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-black text-white flex items-center justify-center">
+    <main className="min-h-screen bg-gradient-to-t from-black via-black to-blue-900 text-white flex items-center justify-center">
       <div className="max-w-sm w-full px-6">
         {/* Logo */}
         <div className="flex flex-col items-center mb-10">
@@ -20,18 +20,20 @@ export default function HomePage() {
         {/* Buttons */}
         <div className="flex flex-col gap-4">
           <Link
+            href="/places"
+            className="block text-center bg-white text-black py-4 rounded-2xl text-lg font-semibold"
+          >
+            📍 Places branchées
+          </Link>
+
+          <Link
             href="/events"
             className="block text-center bg-white text-black py-4 rounded-2xl text-lg font-semibold"
           >
             🎉 Voir les Events
           </Link>
 
-          <Link
-            href="/places"
-            className="block text-center border border-white/30 py-4 rounded-2xl text-lg font-semibold"
-          >
-            📍 Découvrir les Places
-          </Link>
+
         </div>
 
         {/* Footer */}

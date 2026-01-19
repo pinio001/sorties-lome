@@ -181,7 +181,7 @@ export default function PlacesPage() {
         <div className="flex items-center justify-between">
           <Logo />
           <a
-            href="/"
+            href="/events"
             className="text-sm text-white border border-white/20 px-3 py-2 rounded-xl transition-all hover:bg-white/10 active:scale-95"
           >
             ← Events
