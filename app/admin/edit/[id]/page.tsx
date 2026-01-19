@@ -107,27 +107,32 @@ export default function EditEventPage() {
     <main className="p-4 max-w-md mx-auto">
       <h1 className="text-2xl font-bold mb-2">Modifier événement</h1>
 
-      <div className="text-sm text-gray-600 mb-4">
+      <div className="text-sm text-gray-600 mb-4 text-white placeholder-gray-400">
         Audience (❤️ intéressés) : <span className="font-semibold">{event.interest_count ?? 0}</span>
       </div>
 
       <form onSubmit={save} className="space-y-3">
         <input
-          className="w-full border rounded-lg p-2"
+          className="w-full border rounded-lg p-2 bg-white text-black placeholder-gray-400"
           value={event.title ?? ""}
           onChange={(e) => setEvent({ ...event, title: e.target.value })}
           placeholder="Titre"
         />
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 ">
           <input
-            className="w-full border rounded-lg p-2"
+            className="
+              w-full border rounded-lg p-2
+              bg-white text-black
+              placeholder-gray-400"
             type="date"
             value={event.event_date ?? ""}
             onChange={(e) => setEvent({ ...event, event_date: e.target.value })}
           />
           <input
-            className="w-full border rounded-lg p-2"
+            className="w-full border rounded-lg p-2
+              bg-white text-black
+              placeholder-gray-400"
             type="time"
             value={timeForInput}
             onChange={(e) => setEvent({ ...event, event_time: e.target.value })}
@@ -135,21 +140,21 @@ export default function EditEventPage() {
         </div>
 
         <input
-          className="w-full border rounded-lg p-2"
+          className="w-full border rounded-lg p-2 bg-white text-black placeholder-gray-400"
           value={event.location ?? ""}
           onChange={(e) => setEvent({ ...event, location: e.target.value })}
           placeholder="Lieu"
         />
 
         <input
-          className="w-full border rounded-lg p-2"
+          className="w-full border rounded-lg p-2 bg-white text-black placeholder-gray-400"
           value={event.image ?? ""}
           onChange={(e) => setEvent({ ...event, image: e.target.value })}
           placeholder="URL image"
         />
 
         <input
-          className="w-full border rounded-lg p-2"
+          className="w-full border rounded-lg p-2 bg-white text-black placeholder-gray-400"
           value={event.whatsapp ?? ""}
           onChange={(e) => setEvent({ ...event, whatsapp: e.target.value })}
           placeholder="WhatsApp (+228...)"
@@ -165,7 +170,7 @@ export default function EditEventPage() {
         </label>
 
         <input
-          className="w-full border rounded-lg p-2"
+          className="w-full border rounded-lg p-2 bg-white text-black placeholder-gray-400"
           type="number"
           min={0}
           value={Number(event.featured_rank ?? 0)}
@@ -174,7 +179,7 @@ export default function EditEventPage() {
         />
 
         {/* Description + générateur */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between ">
           <div className="font-semibold">Description</div>
           <button
             type="button"
@@ -186,13 +191,13 @@ export default function EditEventPage() {
         </div>
 
         <textarea
-          className="w-full border rounded-lg p-2 min-h-[160px]"
+          className="w-full border rounded-lg p-2 min-h-[160px] bg-white text-black"
           placeholder="Description (modifiable)"
           value={event.description ?? ""}
           onChange={(e) => setEvent({ ...event, description: e.target.value })}
         />
 
-        <button className="w-full bg-black text-white py-2 rounded-lg" type="submit">
+        <button className="w-full bg-black text-white py-2 rounded-lg " type="submit">
           Enregistrer
         </button>
 
