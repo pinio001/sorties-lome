@@ -23,8 +23,8 @@ export default function MediaCarousel({
       setTimeout(() => {
         setIndex((i) => (i + 1) % media.length);
         setFade(true);
-      }, 100); // durée réelle du fade
-    }, 100); // ⏱️ vitesse carousel 
+      }, 1500); // durée réelle du fade
+    }, 1500); // ⏱️ vitesse carousel 
 
     return () => clearInterval(timer);
   }, [media.length]);
@@ -58,8 +58,8 @@ export default function MediaCarousel({
           className={`
             w-full h-full object-cover
             transition-opacity
-            duration-50
-            ${fade ? "opacity-100" : "opacity-0"}
+            duration-100
+            ${fade ? "opacity-100" : "opacity-100"}
           `}
         />
       )}

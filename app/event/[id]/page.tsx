@@ -1,15 +1,18 @@
+// app/event/[id]/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabaseClient";
 import { useParams, useRouter } from "next/navigation";
 import BingoBackground from "../../components/BingoBackground";
+import MediaCarousel from "../../components/MediaCaroussel";
 
 type EventItem = {
   id: string;
   title: string | null;
   location: string | null;
   image: string | null;
+  media_urls?: string[] | null;
   whatsapp: string | null;
   is_featured: boolean | null;
 
@@ -51,12 +54,14 @@ function getOrCreateDeviceId() {
   try {
     v = localStorage.getItem(key) || "";
     if (!v) {
-      // id simple + stable
-      v = "dev_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+      v =
+        "dev_" +
+        Math.random().toString(16).slice(2) +
+        "_" +
+        Date.now().toString(16);
       localStorage.setItem(key, v);
     }
   } catch {
-    // fallback si storage bloqué
     v = "dev_" + Date.now().toString(16);
   }
   return v;
@@ -100,6 +105,15 @@ export default function EventDetailPage() {
 
     loadEvent();
   }, [eventId]);
+
+  const media = useMemo(() => {
+    if (!event) return [];
+    const arr = Array.isArray(event.media_urls) ? event.media_urls : [];
+    const merged = [event.image, ...arr].filter(
+      (x): x is string => typeof x === "string" && x.trim().length > 0
+    );
+    return Array.from(new Set(merged)).slice(0, 4);
+  }, [event]);
 
   const dateTxt = useMemo(() => {
     if (!event) return "";
@@ -168,7 +182,6 @@ export default function EventDetailPage() {
 
       setLiked(true);
 
-      // UI: on incrémente localement si pas already
       if (!data?.already) {
         setEvent((prev) =>
           prev ? { ...prev, interest_count: (prev.interest_count ?? 0) + 1 } : prev
@@ -216,14 +229,10 @@ export default function EventDetailPage() {
     <main className="max-w-md mx-auto min-h-screen">
       <BingoBackground />
 
-      {/* Header image */}
-      {event.image ? (
+      {/* Header media (CAROUSEL ONLY HERE) */}
+      {media.length > 0 ? (
         <div className="relative">
-          <img
-            src={event.image}
-            alt={event.title ?? "Événement"}
-            className="w-full h-72 object-cover"
-          />
+          <MediaCarousel media={media} height="h-72" />
 
           <button
             onClick={() => router.push("/")}

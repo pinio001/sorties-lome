@@ -1,16 +1,19 @@
+// app/place/[id]/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabaseClient";
 import { useParams, useRouter } from "next/navigation";
 import BingoBackground from "../../components/BingoBackground";
+import MediaCarousel from "../../components/MediaCaroussel";
 
 type PlaceItem = {
   id: string;
   name: string;
-  category: "bar_resto" | "hotel" | "loisirs";
+  category: string | null;
   location: string | null;
   image: string | null;
+  media_urls?: string[] | null;
   whatsapp: string | null;
   description: string | null;
   is_featured: boolean | null;
@@ -23,10 +26,14 @@ function normalizePhoneToWa(phone: string) {
   return cleaned.startsWith("+") ? cleaned.slice(1) : cleaned;
 }
 
-function categoryLabel(c: PlaceItem["category"]) {
-  if (c === "bar_resto") return "Bar / Resto";
-  if (c === "hotel") return "Hôtel / Auberge";
-  return "Loisirs";
+function categoryLabel(raw: string | null) {
+  if (!raw) return "Bar / Resto";
+  if (raw === "Bar/Resto") return "Bar / Resto";
+  if (raw === "Loisirs") return "Loisirs";
+  if (raw === "Night Clubs") return "Night Clubs";
+  if (raw === "Hôtels") return "Hôtels";
+  if (raw === "Populaires") return "Populaires";
+  return raw;
 }
 
 function getOrCreateDeviceId() {
@@ -35,7 +42,11 @@ function getOrCreateDeviceId() {
   try {
     v = localStorage.getItem(key) || "";
     if (!v) {
-      v = "dev_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+      v =
+        "dev_" +
+        Math.random().toString(16).slice(2) +
+        "_" +
+        Date.now().toString(16);
       localStorage.setItem(key, v);
     }
   } catch {
@@ -81,6 +92,16 @@ export default function PlaceDetailPage() {
 
     load();
   }, [placeId]);
+
+  const media = useMemo(() => {
+    if (!place) return [];
+    const arr = Array.isArray(place.media_urls) ? place.media_urls : [];
+    const merged = [place.image, ...arr].filter(
+      (x): x is string => typeof x === "string" && x.trim().length > 0
+    );
+    // de-dup + max 4
+    return Array.from(new Set(merged)).slice(0, 4);
+  }, [place]);
 
   const waLink = useMemo(() => {
     if (!place?.whatsapp) return null;
@@ -171,9 +192,7 @@ export default function PlaceDetailPage() {
     return (
       <main className="p-4 max-w-md mx-auto min-h-screen">
         <BingoBackground />
-        <p className="text-sm text-red-400 mb-4">
-          Erreur: {errorMsg ?? "Introuvable"}
-        </p>
+        <p className="text-sm text-red-400 mb-4">Erreur: {errorMsg ?? "Introuvable"}</p>
         <button
           onClick={() => router.push("/places")}
           className="border border-white/20 text-white px-3 py-2 rounded-xl"
@@ -188,10 +207,10 @@ export default function PlaceDetailPage() {
     <main className="max-w-md mx-auto min-h-screen">
       <BingoBackground />
 
-      {/* Image header */}
-      {place.image ? (
+      {/* Media header (CAROUSEL ONLY HERE) */}
+      {media.length > 0 ? (
         <div className="relative">
-          <img src={place.image} alt={place.name} className="w-full h-72 object-cover" />
+          <MediaCarousel media={media} height="h-72" />
 
           <button
             onClick={() => router.push("/places")}

@@ -1,13 +1,16 @@
+// app/places/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import BingoBackground from "../components/BingoBackground";
 
+type PlaceCategory = "bar_resto" | "loisirs" | "club" | "hotel";
+
 type PlaceItem = {
   id: string;
   name: string;
-  category: "bar_resto" | "hotel" | "loisirs";
+  category: string | null;
   location: string | null;
   image: string | null;
   media_urls?: string[] | null;
@@ -18,39 +21,42 @@ type PlaceItem = {
   interest_count: number | null;
 };
 
-type Tab = "BAR_RESTO" | "HOTEL" | "LOISIRS" | "POPULAIRES";
+const TABS = [
+  { key: "bar_resto", label: "Bar / Resto" },
+  { key: "loisirs", label: "Loisirs" },
+  { key: "club", label: "Night Clubs" },
+  { key: "hotel", label: "Hôtels" },
+  { key: "populaires", label: "Populaires ❤️" },
+] as const;
 
-/* =========================
-   HELPERS
-========================= */
+type TabKey = (typeof TABS)[number]["key"];
+
+function normalizeCategory(raw?: string | null): PlaceCategory {
+  if (!raw) return "bar_resto";
+
+  switch (raw) {
+    case "Bar/Resto":
+      return "bar_resto";
+    case "Loisirs":
+      return "loisirs";
+    case "Night Clubs":
+      return "club";
+    case "Hôtels":
+      return "hotel";
+    default:
+      return "bar_resto";
+  }
+}
 
 function normalizePhoneToWa(phone: string) {
   const cleaned = phone.replace(/[^\d+]/g, "");
   return cleaned.startsWith("+") ? cleaned.slice(1) : cleaned;
 }
 
-function tabLabel(t: Tab) {
-  if (t === "BAR_RESTO") return "Bar / Resto";
-  if (t === "HOTEL") return "Hôtel / Auberge";
-  if (t === "LOISIRS") return "Loisirs";
-  return "Populaires ❤️";
-}
-
-function categoryFromTab(t: Tab): PlaceItem["category"] | null {
-  if (t === "BAR_RESTO") return "bar_resto";
-  if (t === "HOTEL") return "hotel";
-  if (t === "LOISIRS") return "loisirs";
-  return null;
-}
-
-/* =========================
-   PAGE
-========================= */
-
 export default function PlacesPage() {
   const [places, setPlaces] = useState<PlaceItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<Tab>("BAR_RESTO");
+  const [tab, setTab] = useState<TabKey>("bar_resto");
 
   useEffect(() => {
     const load = async () => {
@@ -62,29 +68,24 @@ export default function PlacesPage() {
       setPlaces((data ?? []) as PlaceItem[]);
       setLoading(false);
     };
-
     load();
   }, []);
 
   const featuredForTab = useMemo(() => {
-    const cat = categoryFromTab(tab);
-    if (!cat) return [];
+    if (tab === "populaires") return [];
     return places
-      .filter((p) => p.category === cat && p.is_featured)
+      .filter((p) => normalizeCategory(p.category) === tab && p.is_featured === true)
       .sort((a, b) => (a.featured_rank ?? 0) - (b.featured_rank ?? 0));
   }, [places, tab]);
 
   const filtered = useMemo(() => {
-    if (tab === "POPULAIRES") {
+    if (tab === "populaires") {
       return [...places].sort(
         (a, b) => (b.interest_count ?? 0) - (a.interest_count ?? 0)
       );
     }
-    const cat = categoryFromTab(tab);
-    return places.filter((p) => p.category === cat);
+    return places.filter((p) => normalizeCategory(p.category) === tab);
   }, [places, tab]);
-
-  /* ========================= */
 
   return (
     <main className="min-h-screen">
@@ -98,13 +99,10 @@ export default function PlacesPage() {
               B
             </div>
             <div>
-              <div className="text-white font-semibold leading-tight">
-                Bingo
-              </div>
+              <div className="text-white font-semibold">Bingo</div>
               <div className="text-xs text-white/60">Places</div>
             </div>
           </div>
-
           <a
             href="/events"
             className="text-sm border border-white/20 px-3 py-2 rounded-xl text-white hover:bg-white/10"
@@ -113,30 +111,29 @@ export default function PlacesPage() {
           </a>
         </div>
 
-        {/* HERO CARD (comme Events) */}
+        {/* HERO */}
         <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4 mb-5">
-          <h1 className="text-white font-semibold text-lg">
-            Où sortir à Lomé ?
-          </h1>
+          <h1 className="text-white font-semibold text-lg">Où sortir à Lomé ?</h1>
           <p className="text-sm text-white/60 mt-1">
-            Bars, restos, hôtels, loisirs — découvre les meilleurs spots
-            autour de toi.
+            Bars, loisirs, night clubs, hôtels — découvre les meilleurs spots.
           </p>
         </div>
 
         {/* TABS */}
         <div className="flex gap-2 flex-wrap mb-4">
-          {(["BAR_RESTO", "HOTEL", "LOISIRS", "POPULAIRES"] as Tab[]).map((t) => (
+          {TABS.map((t) => (
             <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`px-3 py-2 rounded-xl text-sm border ${
-                tab === t
-                  ? "bg-white text-black"
-                  : "border-white/20 text-white"
-              }`}
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`px-3 py-2 rounded-xl text-sm border transition
+                ${
+                  tab === t.key
+                    ? "bg-white text-black"
+                    : "border-white/20 text-white hover:bg-white/10"
+                }
+              `}
             >
-              {tabLabel(t)}
+              {t.label}
             </button>
           ))}
         </div>
@@ -146,11 +143,9 @@ export default function PlacesPage() {
           <p className="text-white/60 mt-6">Chargement…</p>
         ) : (
           <>
-            {tab !== "POPULAIRES" && featuredForTab.length > 0 && (
+            {tab !== "populaires" && featuredForTab.length > 0 && (
               <>
-                <h2 className="text-white font-semibold mt-6 mb-3">
-                  🔥 En avant
-                </h2>
+                <h2 className="text-white font-semibold mt-6 mb-3">🔥 En avant</h2>
                 <div className="grid gap-4">
                   {featuredForTab.map((p) => (
                     <PlaceCard key={p.id} place={p} />
@@ -160,7 +155,6 @@ export default function PlacesPage() {
             )}
 
             <h2 className="text-white font-semibold mt-6 mb-3">Tous</h2>
-
             <div className="grid gap-4">
               {filtered.map((p) => (
                 <PlaceCard key={p.id} place={p} />
@@ -174,37 +168,27 @@ export default function PlacesPage() {
 }
 
 /* =========================
-   CARD (inchangé)
+   CARD (NO CAROUSEL HERE)
 ========================= */
 
 function PlaceCard({ place }: { place: PlaceItem }) {
-  const media =
-    place.media_urls && place.media_urls.length > 0
-      ? place.media_urls
-      : place.image
-      ? [place.image]
-      : [];
+  // ✅ Pas de défilement sur la page principale :
+  // on affiche une seule image (image principale, sinon 1er media_urls)
+  const primary =
+    place.image ??
+    (Array.isArray(place.media_urls) && place.media_urls.length > 0
+      ? place.media_urls[0]
+      : null);
 
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    if (media.length <= 1) return;
-    const t = setInterval(() => {
-      setIndex((i) => (i + 1) % media.length);
-    }, 1500);
-    return () => clearInterval(t);
-  }, [media.length]);
-
-  const current = media[index];
-  const isVideo = current?.match(/\.(mp4|webm|ogg)$/i);
+  const isVideo = primary?.match(/\.(mp4|webm|ogg)$/i);
 
   return (
     <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
       <div className="relative w-full h-44 overflow-hidden">
-        {current ? (
+        {primary ? (
           isVideo ? (
             <video
-              src={current}
+              src={primary}
               autoPlay
               muted
               loop
@@ -213,9 +197,10 @@ function PlaceCard({ place }: { place: PlaceItem }) {
             />
           ) : (
             <img
-              src={current}
+              src={primary}
               alt={place.name}
-              className="w-full h-full object-cover transition-opacity duration-300"
+              className="w-full h-full object-cover"
+              loading="lazy"
             />
           )
         ) : (
@@ -235,9 +220,7 @@ function PlaceCard({ place }: { place: PlaceItem }) {
           )}
         </div>
 
-        <p className="text-sm text-white/60 mt-1">
-          {place.location ?? "Lieu ?"}
-        </p>
+        <p className="text-sm text-white/60 mt-1">{place.location ?? "Lieu ?"}</p>
 
         <div className="mt-4 flex gap-2">
           <a
