@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-type Category = "bar_resto" | "hotel" | "loisirs";
+type Category = "bar_resto" | "loisirs" | "club" | "hotel";
 
 function generateWhatsAppDescription(
   name: string,
@@ -12,9 +12,11 @@ function generateWhatsAppDescription(
   const catLabel =
     category === "bar_resto"
       ? "Bar / Resto"
-      : category === "hotel"
-      ? "Hôtel / Auberge"
-      : "Loisirs";
+      : category === "loisirs"
+      ? "Loisirs"
+      : category === "club"
+      ? "Night Club"
+      : "Hôtels";
 
   return [
     `✨ *${name || "Bon plan"}*`,
@@ -63,20 +65,17 @@ export default function AdminPlacesPage() {
     }
 
     setLoading(true);
-
     try {
       const res = await fetch("/api/admin/places", {
         method: "POST",
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
           category,
           location: location || null,
-          image: image || null, // fallback
-          media_urls: mediaUrls.filter(Boolean), // ⭐ NOUVEAU
+          image: image || null,
+          media_urls: mediaUrls.filter(Boolean),
           whatsapp: whatsapp || null,
           description: description || null,
           is_featured: isFeatured,
@@ -85,7 +84,6 @@ export default function AdminPlacesPage() {
       });
 
       const data = await res.json().catch(() => ({}));
-
       if (!res.ok) {
         alert("Erreur : " + (data?.error || "Impossible"));
         return;
@@ -108,7 +106,6 @@ export default function AdminPlacesPage() {
   return (
     <main className="min-h-screen bg-black text-white">
       <div className="max-w-md mx-auto p-4">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold">Admin • Ajouter une place</h1>
           <a href="/admin/places/manage" className="underline text-sm">
@@ -116,11 +113,10 @@ export default function AdminPlacesPage() {
           </a>
         </div>
 
-        {/* Form */}
         <div className="mt-6 grid gap-4">
           <input
             className="rounded-xl p-3 bg-white text-black"
-            placeholder="Nom (ex: Byblos Lounge)"
+            placeholder="Nom"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
@@ -131,13 +127,14 @@ export default function AdminPlacesPage() {
             onChange={(e) => setCategory(e.target.value as Category)}
           >
             <option value="bar_resto">Bar / Resto</option>
-            <option value="hotel">Hôtel / Auberge</option>
             <option value="loisirs">Loisirs</option>
+            <option value="club">Night Clubs</option>
+            <option value="hotel">Hôtels</option>
           </select>
 
           <input
             className="rounded-xl p-3 bg-white text-black"
-            placeholder="Lieu (ex: Agoè, Downtown...)"
+            placeholder="Lieu"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
           />
@@ -149,15 +146,10 @@ export default function AdminPlacesPage() {
             onChange={(e) => setImage(e.target.value)}
           />
 
-          {/* Médias multiples */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm">Médias (images / vidéos – max 4)</span>
-              <button
-                type="button"
-                onClick={addMediaField}
-                className="text-sm underline"
-              >
+              <span className="text-sm">Médias (max 4)</span>
+              <button type="button" onClick={addMediaField} className="underline text-sm">
                 + Ajouter
               </button>
             </div>
@@ -166,7 +158,7 @@ export default function AdminPlacesPage() {
               <div key={i} className="flex gap-2">
                 <input
                   className="flex-1 rounded-xl p-3 bg-white text-black"
-                  placeholder={`Média ${i + 1} (URL)`}
+                  placeholder={`Média ${i + 1}`}
                   value={url}
                   onChange={(e) => {
                     const copy = [...mediaUrls];
@@ -174,11 +166,7 @@ export default function AdminPlacesPage() {
                     setMediaUrls(copy);
                   }}
                 />
-                <button
-                  type="button"
-                  onClick={() => removeMediaField(i)}
-                  className="text-red-400"
-                >
+                <button type="button" onClick={() => removeMediaField(i)} className="text-red-400">
                   ✕
                 </button>
               </div>
@@ -187,7 +175,7 @@ export default function AdminPlacesPage() {
 
           <input
             className="rounded-xl p-3 bg-white text-black"
-            placeholder="WhatsApp (+228...)"
+            placeholder="WhatsApp"
             value={whatsapp}
             onChange={(e) => setWhatsapp(e.target.value)}
           />
@@ -199,7 +187,7 @@ export default function AdminPlacesPage() {
                 checked={isFeatured}
                 onChange={(e) => setIsFeatured(e.target.checked)}
               />
-              <span>Mettre en avant</span>
+              Mettre en avant
             </label>
 
             <input
@@ -213,18 +201,13 @@ export default function AdminPlacesPage() {
 
           <div className="flex items-center justify-between">
             <span>Description</span>
-            <button
-              onClick={generateDescription}
-              type="button"
-              className="text-sm underline"
-            >
+            <button onClick={generateDescription} type="button" className="underline text-sm">
               Générer
             </button>
           </div>
 
           <textarea
             className="rounded-xl p-3 bg-white text-black min-h-[140px]"
-            placeholder="Description WhatsApp"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
@@ -236,15 +219,6 @@ export default function AdminPlacesPage() {
           >
             {loading ? "..." : "Ajouter"}
           </button>
-
-          <div className="flex justify-between text-sm mt-4">
-            <a href="/admin" className="underline">
-              ← Admin Events
-            </a>
-            <a href="/admin/manage" className="underline">
-              Gérer Events →
-            </a>
-          </div>
         </div>
       </div>
     </main>
