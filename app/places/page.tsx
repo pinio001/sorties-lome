@@ -94,9 +94,9 @@ export default function PlacesPage() {
       <div className="max-w-md mx-auto px-4 pt-6 pb-10">
         {/* HEADER */}
         <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-white text-black font-bold flex items-center justify-center">
-              B
+          <div className="flex items-center gap-3 animate-fade-in">
+            <div className="h-10 w-10 rounded-2xl bg-white text-black font-bold flex items-center justify-center shadow-lg">
+              <span className="font-black text-xl tracking-tight">B</span>
             </div>
             <div>
               <div className="text-white font-semibold">Bingo</div>
