@@ -20,23 +20,14 @@ type PlaceItem = {
   featured_rank: number | null;
   interest_count: number | null;
 
-  // ✅ optionnel : si tu ajoutes ce champ plus tard en DB ça fonctionnera direct
-  is_whatsapp?: boolean | null;
-
   maps_url?: string | null;
   website_url?: string | null;
   instagram_url?: string | null;
   tiktok_url?: string | null;
 };
 
-function normalizePhoneDigits(raw: string) {
-  // garde + et chiffres
-  return raw.replace(/[^\d+]/g, "").trim();
-}
-
-function normalizePhoneToWa(raw: string) {
-  // wa.me préfère sans "+"
-  const cleaned = normalizePhoneDigits(raw);
+function normalizePhoneToWa(phone: string) {
+  const cleaned = phone.replace(/[^\d+]/g, "");
   return cleaned.startsWith("+") ? cleaned.slice(1) : cleaned;
 }
 
@@ -74,6 +65,38 @@ function cleanUrl(u?: string | null) {
   if (!s) return null;
   if (/^https?:\/\//i.test(s)) return s;
   return `https://${s}`;
+}
+
+function getUtm() {
+  const sp = new URLSearchParams(window.location.search);
+  return {
+    utm_source: sp.get("utm_source"),
+    utm_medium: sp.get("utm_medium"),
+    utm_campaign: sp.get("utm_campaign"),
+  };
+}
+
+async function trackClick(
+  entity_type: "place" | "event",
+  entity_id: string,
+  click_type: "whatsapp" | "maps" | "website" | "instagram" | "tiktok"
+) {
+  try {
+    const device_id = getOrCreateDeviceId();
+    const utm = getUtm();
+
+    fetch("/api/track/click", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        entity_type,
+        entity_id,
+        click_type,
+        device_id,
+        ...utm,
+      }),
+    }).catch(() => {});
+  } catch {}
 }
 
 export default function PlaceDetailPage() {
@@ -127,28 +150,11 @@ export default function PlaceDetailPage() {
     return Array.from(new Set(merged)).slice(0, 4);
   }, [place]);
 
-  const waLinkWeb = useMemo(() => {
+  const waLink = useMemo(() => {
     if (!place?.whatsapp) return null;
     return `https://wa.me/${normalizePhoneToWa(place.whatsapp)}?text=${encodeURIComponent(
       `Bonsoir, je veux des infos sur: ${place.name ?? "cette place"}`
     )}`;
-  }, [place]);
-
-  const waDeepLink = useMemo(() => {
-    if (!place?.whatsapp) return null;
-    const phone = normalizePhoneDigits(place.whatsapp);
-    const text = encodeURIComponent(
-      `Bonsoir, je veux des infos sur: ${place.name ?? "cette place"}`
-    );
-    // Deep link mobile (ouvre l’app si installée)
-    return `whatsapp://send?phone=${phone}&text=${text}`;
-  }, [place]);
-
-  const telLink = useMemo(() => {
-    if (!place?.whatsapp) return null;
-    const phone = normalizePhoneDigits(place.whatsapp);
-    if (!phone) return null;
-    return `tel:${phone}`;
   }, [place]);
 
   const shareText = useMemo(() => {
@@ -158,6 +164,7 @@ export default function PlaceDetailPage() {
       `✨ *${place.name}*`,
       `📌 Catégorie : ${categoryLabel(place.category)}`,
       place.location ? `📍 Lieu : ${place.location}` : "",
+      place.description ? "" : "",
       place.description ? place.description : "",
       "",
       `👉 Détails : ${url}`,
@@ -211,9 +218,7 @@ export default function PlaceDetailPage() {
 
       if (!data?.already) {
         setPlace((prev) =>
-          prev
-            ? { ...prev, interest_count: (prev.interest_count ?? 0) + 1 }
-            : prev
+          prev ? { ...prev, interest_count: (prev.interest_count ?? 0) + 1 } : prev
         );
       }
     } finally {
@@ -221,54 +226,13 @@ export default function PlaceDetailPage() {
     }
   };
 
-  const openExternal = (u: string) => window.open(u, "_blank", "noreferrer");
-
-  // ✅ NOUVEAU : bouton "Contacter sur WhatsApp" -> si is_whatsapp=false => tel:
-  const handleContact = () => {
-    if (!place?.whatsapp) {
-      alert("Numéro non disponible.");
-      return;
-    }
-
-    // Si tu as le champ is_whatsapp et qu’il est false -> appel direct
-    if (place.is_whatsapp === false) {
-      if (telLink) window.location.href = telLink;
-      else alert("Numéro invalide.");
-      return;
-    }
-
-    // Sinon : on tente WhatsApp (deep link sur mobile), puis fallback tel si ça n'ouvre pas
-    const fallback = () => {
-      if (telLink) window.location.href = telLink;
-      else window.open(waLinkWeb || "", "_blank", "noreferrer");
-    };
-
-    // fallback auto si WhatsApp ne s'ouvre pas (pas installé)
-    let timer: any = null;
-    const onVis = () => {
-      if (document.visibilityState === "hidden") {
-        if (timer) clearTimeout(timer);
-        document.removeEventListener("visibilitychange", onVis);
-      }
-    };
-    document.addEventListener("visibilitychange", onVis);
-
-    timer = setTimeout(() => {
-      document.removeEventListener("visibilitychange", onVis);
-      if (document.visibilityState === "visible") {
-        // WhatsApp ne s'est pas ouvert => appel
-        fallback();
-      }
-    }, 900);
-
-    // tenter deep link (mobile), sinon web
-    if (waDeepLink) {
-      window.location.href = waDeepLink;
-    } else if (waLinkWeb) {
-      window.open(waLinkWeb, "_blank", "noreferrer");
-    } else {
-      fallback();
-    }
+  const openTracked = (
+    url: string,
+    type: "whatsapp" | "maps" | "website" | "instagram" | "tiktok"
+  ) => {
+    if (!place?.id) return;
+    trackClick("place", place.id, type);
+    window.open(url, "_blank", "noreferrer");
   };
 
   if (loading) {
@@ -358,11 +322,12 @@ export default function PlaceDetailPage() {
           </div>
         ) : null}
 
+        {/* ✅ NOUVEAUX BOUTONS + TRACKING */}
         {(maps || website || ig || tt) && (
           <div className="mt-4 grid gap-2">
             {maps && (
               <button
-                onClick={() => openExternal(maps)}
+                onClick={() => openTracked(maps, "maps")}
                 className="text-center border border-white/20 text-white py-3 rounded-xl hover:bg-white/10"
               >
                 Adresse
@@ -371,7 +336,7 @@ export default function PlaceDetailPage() {
 
             {website && (
               <button
-                onClick={() => openExternal(website)}
+                onClick={() => openTracked(website, "website")}
                 className="text-center border border-white/20 text-white py-3 rounded-xl hover:bg-white/10"
               >
                 Page web
@@ -380,7 +345,7 @@ export default function PlaceDetailPage() {
 
             {ig && (
               <button
-                onClick={() => openExternal(ig)}
+                onClick={() => openTracked(ig, "instagram")}
                 className="text-center border border-white/20 text-white py-3 rounded-xl hover:bg-white/10"
               >
                 Instagram/Facebook
@@ -389,7 +354,7 @@ export default function PlaceDetailPage() {
 
             {tt && (
               <button
-                onClick={() => openExternal(tt)}
+                onClick={() => openTracked(tt, "tiktok")}
                 className="text-center border border-white/20 text-white py-3 rounded-xl hover:bg-white/10"
               >
                 TikTok
@@ -399,12 +364,21 @@ export default function PlaceDetailPage() {
         )}
 
         <div className="mt-5 grid gap-2">
-          <button
-            onClick={handleContact}
-            className="text-center bg-black text-white py-3 rounded-xl font-medium border border-white/20 hover:bg-white/10"
-          >
-            Contacter sur WhatsApp
-          </button>
+          {waLink ? (
+            <button
+              onClick={() => openTracked(waLink, "whatsapp")}
+              className="text-center bg-black text-white py-3 rounded-xl font-medium border border-white/20"
+            >
+              Contacter sur WhatsApp
+            </button>
+          ) : (
+            <button
+              className="text-center bg-black/5 text-white/40 py-3 rounded-xl border border-white/40 cursor-not-allowed"
+              disabled
+            >
+              WhatsApp non disponible
+            </button>
+          )}
 
           <button
             onClick={handleShare}
