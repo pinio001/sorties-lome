@@ -33,7 +33,6 @@ type TabKey = (typeof TABS)[number]["key"];
 
 function normalizeCategory(raw?: string | null): PlaceCategory {
   if (!raw) return "bar_resto";
-
   switch (raw) {
     case "Bar/Resto":
       return "bar_resto";
@@ -53,10 +52,17 @@ function normalizePhoneToWa(phone: string) {
   return cleaned.startsWith("+") ? cleaned.slice(1) : cleaned;
 }
 
+function norm(s: string) {
+  return (s ?? "").trim().toLowerCase();
+}
+
 export default function PlacesPage() {
   const [places, setPlaces] = useState<PlaceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TabKey>("bar_resto");
+
+  const [q, setQ] = useState("");
+  const [loc, setLoc] = useState("TOUS");
 
   useEffect(() => {
     const load = async () => {
@@ -71,28 +77,55 @@ export default function PlacesPage() {
     load();
   }, []);
 
+  const locationOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of places) {
+      const l = (p.location ?? "").trim();
+      if (l) set.add(l);
+    }
+    return ["TOUS", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
+  }, [places]);
+
+  const matchesSearchAndLoc = (p: PlaceItem) => {
+    const query = norm(q);
+    const locSel = loc;
+
+    const okName = query ? norm(p.name).includes(query) : true;
+
+    const okLoc =
+      locSel === "TOUS" ? true : norm(p.location ?? "") === norm(locSel);
+
+    return okName && okLoc;
+  };
+
   const featuredForTab = useMemo(() => {
     if (tab === "populaires") return [];
     return places
-      .filter((p) => normalizeCategory(p.category) === tab && p.is_featured === true)
+      .filter(
+        (p) =>
+          normalizeCategory(p.category) === tab &&
+          p.is_featured === true &&
+          matchesSearchAndLoc(p)
+      )
       .sort((a, b) => (a.featured_rank ?? 0) - (b.featured_rank ?? 0));
-  }, [places, tab]);
+  }, [places, tab, q, loc]);
 
   const filtered = useMemo(() => {
     if (tab === "populaires") {
-      return [...places].sort(
-        (a, b) => (b.interest_count ?? 0) - (a.interest_count ?? 0)
-      );
+      return [...places]
+        .filter(matchesSearchAndLoc)
+        .sort((a, b) => (b.interest_count ?? 0) - (a.interest_count ?? 0));
     }
-    return places.filter((p) => normalizeCategory(p.category) === tab);
-  }, [places, tab]);
+    return places
+      .filter((p) => normalizeCategory(p.category) === tab)
+      .filter(matchesSearchAndLoc);
+  }, [places, tab, q, loc]);
 
   return (
     <main className="min-h-screen">
       <BingoBackground />
 
       <div className="max-w-md mx-auto px-4 pt-6 pb-10">
-        {/* HEADER */}
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3 animate-fade-in">
             <div className="h-10 w-10 rounded-2xl bg-white text-black font-bold flex items-center justify-center shadow-lg">
@@ -111,15 +144,36 @@ export default function PlacesPage() {
           </a>
         </div>
 
-        {/* HERO */}
-        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4 mb-5">
+        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4 mb-4">
           <h1 className="text-white font-semibold text-lg">Où sortir à Lomé ?</h1>
           <p className="text-sm text-white/60 mt-1">
             Bars, loisirs, night clubs, hôtels — découvre les meilleurs spots.
           </p>
         </div>
 
-        {/* TABS */}
+        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-3 mb-5 space-y-2">
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Rechercher une place…"
+            className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white placeholder:text-white/40"
+          />
+
+          <select
+            value={loc}
+            onChange={(e) => setLoc(e.target.value)}
+            className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white"
+          >
+            {locationOptions.map((l) => (
+              <option key={l} value={l}>
+                {l}
+              </option>
+            ))}
+          </select>
+
+          <div className="text-xs text-white/60">Résultats : {filtered.length}</div>
+        </div>
+
         <div className="flex gap-2 flex-wrap mb-4">
           {TABS.map((t) => (
             <button
@@ -138,7 +192,6 @@ export default function PlacesPage() {
           ))}
         </div>
 
-        {/* CONTENT */}
         {loading ? (
           <p className="text-white/60 mt-6">Chargement…</p>
         ) : (
@@ -154,12 +207,18 @@ export default function PlacesPage() {
               </>
             )}
 
-            <h2 className="text-white font-semibold mt-6 mb-3">Tous</h2>
+            <h2 className="text-white font-semibold mt-6 mb-3">
+              {tab === "populaires" ? "Classement" : "Tous"}
+            </h2>
             <div className="grid gap-4">
               {filtered.map((p) => (
                 <PlaceCard key={p.id} place={p} />
               ))}
             </div>
+
+            {filtered.length === 0 && (
+              <p className="text-white/60 mt-6">Aucun résultat.</p>
+            )}
           </>
         )}
       </div>
@@ -167,13 +226,7 @@ export default function PlacesPage() {
   );
 }
 
-/* =========================
-   CARD (NO CAROUSEL HERE)
-========================= */
-
 function PlaceCard({ place }: { place: PlaceItem }) {
-  // ✅ Pas de défilement sur la page principale :
-  // on affiche une seule image (image principale, sinon 1er media_urls)
   const primary =
     place.image ??
     (Array.isArray(place.media_urls) && place.media_urls.length > 0
@@ -230,7 +283,7 @@ function PlaceCard({ place }: { place: PlaceItem }) {
             Détails
           </a>
 
-          {place.whatsapp && (
+          {place.whatsapp ? (
             <a
               className="flex-1 text-center border border-white/20 text-white py-2 rounded-xl hover:bg-white/10"
               href={`https://wa.me/${normalizePhoneToWa(place.whatsapp)}?text=${encodeURIComponent(
@@ -241,6 +294,13 @@ function PlaceCard({ place }: { place: PlaceItem }) {
             >
               WhatsApp
             </a>
+          ) : (
+            <button
+              className="flex-1 text-center border border-white/10 text-white/40 py-2 rounded-xl cursor-not-allowed"
+              disabled
+            >
+              WhatsApp
+            </button>
           )}
         </div>
       </div>

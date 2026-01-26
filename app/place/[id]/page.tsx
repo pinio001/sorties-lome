@@ -288,7 +288,7 @@ export default function PlaceDetailPage() {
                 onClick={() => openExternal(ig)}
                 className="text-center border border-white/20 text-white py-3 rounded-xl hover:bg-white/10"
               >
-                Instagram
+                Instagram/Facebook
               </button>
             )}
 
