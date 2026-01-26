@@ -26,7 +26,7 @@ const TABS = [
   { key: "loisirs", label: "Loisirs" },
   { key: "club", label: "Night Clubs" },
   { key: "hotel", label: "Hôtels" },
-  { key: "populaires", label: "Populaires ❤️" },
+  { key: "populaires", label: "Populaires ♥" },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -302,7 +302,7 @@ function PlaceCard({ place }: { place: PlaceItem }) {
           <h2 className="font-semibold text-white">{place.name}</h2>
           {(place.interest_count ?? 0) > 0 && (
             <span className="text-xs bg-white/10 px-2 py-1 rounded-full">
-              ❤️ {place.interest_count}
+              ♥ {place.interest_count}
             </span>
           )}
         </div>
