@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabaseClient";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import BingoBackground from "../../components/BingoBackground";
 import MediaCarousel from "../../components/MediaCaroussel";
 
@@ -39,6 +39,16 @@ function categoryLabel(raw: string | null) {
   if (raw === "Hôtels") return "Hôtels";
   if (raw === "Populaires") return "Populaires";
   return raw;
+}
+
+// ✅ clé URL pour /places?cat=...
+function categoryToCatKey(raw: string | null) {
+  if (!raw || raw === "Bar/Resto") return "bar_resto";
+  if (raw === "Loisirs") return "loisirs";
+  if (raw === "Night Clubs") return "club";
+  if (raw === "Hôtels") return "hotel";
+  if (raw === "Populaires") return "populaires";
+  return "bar_resto";
 }
 
 function getOrCreateDeviceId() {
@@ -84,7 +94,6 @@ async function trackClick(
   try {
     const device_id = getOrCreateDeviceId();
     const utm = getUtm();
-
     fetch("/api/track/click", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -102,7 +111,11 @@ async function trackClick(
 export default function PlaceDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const sp = useSearchParams();
   const placeId = params?.id;
+
+  // ✅ cat venant de /places (ex: /place/ID?cat=club)
+  const catFromUrl = (sp?.get("cat") || "").trim();
 
   const [place, setPlace] = useState<PlaceItem | null>(null);
   const [loading, setLoading] = useState(true);
@@ -157,6 +170,19 @@ export default function PlaceDetailPage() {
     )}`;
   }, [place]);
 
+  // ✅ RETOUR : priorise router.back() (retour exact), sinon fallback /places?cat=...
+  const handleBack = () => {
+    const fallbackCat =
+      catFromUrl || (place ? categoryToCatKey(place.category) : "bar_resto");
+
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+      return;
+    }
+
+    router.push(`/places?cat=${encodeURIComponent(fallbackCat)}`);
+  };
+
   const shareText = useMemo(() => {
     if (!place) return "";
     const url = typeof window !== "undefined" ? window.location.href : "";
@@ -164,7 +190,6 @@ export default function PlaceDetailPage() {
       `✨ *${place.name}*`,
       `📌 Catégorie : ${categoryLabel(place.category)}`,
       place.location ? `📍 Lieu : ${place.location}` : "",
-      place.description ? "" : "",
       place.description ? place.description : "",
       "",
       `👉 Détails : ${url}`,
@@ -252,7 +277,7 @@ export default function PlaceDetailPage() {
           Erreur: {errorMsg ?? "Introuvable"}
         </p>
         <button
-          onClick={() => router.push("/places")}
+          onClick={handleBack}
           className="border border-white/20 text-white px-3 py-2 rounded-xl"
         >
           Retour
@@ -275,7 +300,7 @@ export default function PlaceDetailPage() {
           <MediaCarousel media={media} height="h-72" />
 
           <button
-            onClick={() => router.push("/places")}
+            onClick={handleBack}
             className="absolute top-3 left-3 bg-black/60 border border-white/15 text-white px-3 py-2 rounded-xl backdrop-blur"
           >
             ← Retour
@@ -290,7 +315,7 @@ export default function PlaceDetailPage() {
       ) : (
         <div className="p-4">
           <button
-            onClick={() => router.push("/places")}
+            onClick={handleBack}
             className="border border-white/20 text-white px-3 py-2 rounded-xl"
           >
             ← Retour
@@ -322,7 +347,6 @@ export default function PlaceDetailPage() {
           </div>
         ) : null}
 
-        {/* ✅ NOUVEAUX BOUTONS + TRACKING */}
         {(maps || website || ig || tt) && (
           <div className="mt-4 grid gap-2">
             {maps && (
