@@ -9,7 +9,7 @@ import MediaCarousel from "../../components/MediaCaroussel";
 
 type PlaceItem = {
   id: string;
-  name: string;
+  name: string | null;
   category: string | null;
   location: string | null;
   image: string | null;
@@ -19,6 +19,12 @@ type PlaceItem = {
   is_featured: boolean | null;
   featured_rank: number | null;
   interest_count: number | null;
+
+  // ✅ nouveaux champs
+  maps_url?: string | null;
+  website_url?: string | null;
+  instagram_url?: string | null;
+  tiktok_url?: string | null;
 };
 
 function normalizePhoneToWa(phone: string) {
@@ -42,17 +48,18 @@ function getOrCreateDeviceId() {
   try {
     v = localStorage.getItem(key) || "";
     if (!v) {
-      v =
-        "dev_" +
-        Math.random().toString(16).slice(2) +
-        "_" +
-        Date.now().toString(16);
+      v = "dev_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
       localStorage.setItem(key, v);
     }
   } catch {
     v = "dev_" + Date.now().toString(16);
   }
   return v;
+}
+
+function cleanUrl(u?: string | null) {
+  const s = (u ?? "").trim();
+  return s.length ? s : null;
 }
 
 export default function PlaceDetailPage() {
@@ -74,11 +81,7 @@ export default function PlaceDetailPage() {
       setLoading(true);
       setErrorMsg(null);
 
-      const { data, error } = await supabase
-        .from("places")
-        .select("*")
-        .eq("id", placeId)
-        .single();
+      const { data, error } = await supabase.from("places").select("*").eq("id", placeId).single();
 
       if (error) {
         setErrorMsg(error.message);
@@ -99,14 +102,13 @@ export default function PlaceDetailPage() {
     const merged = [place.image, ...arr].filter(
       (x): x is string => typeof x === "string" && x.trim().length > 0
     );
-    // de-dup + max 4
     return Array.from(new Set(merged)).slice(0, 4);
   }, [place]);
 
   const waLink = useMemo(() => {
     if (!place?.whatsapp) return null;
     return `https://wa.me/${normalizePhoneToWa(place.whatsapp)}?text=${encodeURIComponent(
-      `Bonsoir, je veux des infos sur: ${place.name}`
+      `Bonsoir, je veux des infos sur: ${place.name ?? "cette place"}`
     )}`;
   }, [place]);
 
@@ -163,21 +165,21 @@ export default function PlaceDetailPage() {
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        alert("Erreur: " + (data?.error || JSON.stringify(data) || "Impossible"));
+        alert("Erreur: " + (data?.error || "Impossible"));
         return;
       }
 
       setLiked(true);
 
       if (!data?.already) {
-        setPlace((prev) =>
-          prev ? { ...prev, interest_count: (prev.interest_count ?? 0) + 1 } : prev
-        );
+        setPlace((prev) => (prev ? { ...prev, interest_count: (prev.interest_count ?? 0) + 1 } : prev));
       }
     } finally {
       setLikeLoading(false);
     }
   };
+
+  const openExternal = (u: string) => window.open(u, "_blank", "noreferrer");
 
   if (loading) {
     return (
@@ -203,11 +205,15 @@ export default function PlaceDetailPage() {
     );
   }
 
+  const maps = cleanUrl(place.maps_url);
+  const website = cleanUrl(place.website_url);
+  const ig = cleanUrl(place.instagram_url);
+  const tt = cleanUrl(place.tiktok_url);
+
   return (
     <main className="max-w-md mx-auto min-h-screen">
       <BingoBackground />
 
-      {/* Media header (CAROUSEL ONLY HERE) */}
       {media.length > 0 ? (
         <div className="relative">
           <MediaCarousel media={media} height="h-72" />
@@ -236,13 +242,11 @@ export default function PlaceDetailPage() {
         </div>
       )}
 
-      {/* Body */}
       <div className="p-4">
         <div className="text-white/60 text-xs mb-1">{categoryLabel(place.category)}</div>
 
         <h1 className="text-2xl font-bold text-white">{place.name}</h1>
 
-        {/* compteur ❤️ sous le titre */}
         <div className="mt-2 text-sm text-white/70">
           ❤️ {(place.interest_count ?? 0).toString()} intéressé(s)
         </div>
@@ -251,7 +255,6 @@ export default function PlaceDetailPage() {
           <p>📍 {place.location ?? "Lieu ?"}</p>
         </div>
 
-        {/* Description */}
         {place.description ? (
           <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
             <div className="text-white font-semibold mb-2">Description</div>
@@ -259,15 +262,54 @@ export default function PlaceDetailPage() {
           </div>
         ) : null}
 
-        {/* Actions */}
+        {/* ✅ NOUVEAUX BOUTONS */}
+        {(maps || website || ig || tt) && (
+          <div className="mt-4 grid gap-2">
+            {maps && (
+              <button
+                onClick={() => openExternal(maps)}
+                className="text-center border border-white/20 text-white py-3 rounded-xl hover:bg-white/10"
+              >
+                Adresse
+              </button>
+            )}
+
+            {website && (
+              <button
+                onClick={() => openExternal(website)}
+                className="text-center border border-white/20 text-white py-3 rounded-xl hover:bg-white/10"
+              >
+                Page web
+              </button>
+            )}
+
+            {ig && (
+              <button
+                onClick={() => openExternal(ig)}
+                className="text-center border border-white/20 text-white py-3 rounded-xl hover:bg-white/10"
+              >
+                Instagram
+              </button>
+            )}
+
+            {tt && (
+              <button
+                onClick={() => openExternal(tt)}
+                className="text-center border border-white/20 text-white py-3 rounded-xl hover:bg-white/10"
+              >
+                TikTok
+              </button>
+            )}
+          </div>
+        )}
+
         <div className="mt-5 grid gap-2">
-          {/* WhatsApp principal */}
           {waLink ? (
             <a
               href={waLink}
               target="_blank"
               rel="noreferrer"
-              className="text-center bg-white text-black py-3 rounded-xl font-medium"
+              className="text-center bg-black text-white py-3 rounded-xl font-medium border border-white/20 cursor-not-allowed"
             >
               Contacter sur WhatsApp
             </a>
@@ -287,7 +329,6 @@ export default function PlaceDetailPage() {
             Partager
           </button>
 
-          {/* Interested ❤️ */}
           <button
             onClick={handleInterested}
             disabled={likeLoading || liked}

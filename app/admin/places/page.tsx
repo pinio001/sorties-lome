@@ -1,223 +1,243 @@
+// app/admin/places/page.tsx
 "use client";
 
 import { useState } from "react";
 
-type Category = "bar_resto" | "loisirs" | "club" | "hotel";
-
-function generateWhatsAppDescription(
-  name: string,
-  category: Category,
-  location?: string
-) {
-  const catLabel =
-    category === "bar_resto"
-      ? "Bar / Resto"
-      : category === "loisirs"
-      ? "Loisirs"
-      : category === "club"
-      ? "Night Club"
-      : "Hôtels";
-
-  return [
-    `✨ *${name || "Bon plan"}*`,
-    `📌 Catégorie : ${catLabel}`,
-    location ? `📍 Lieu : ${location}` : "",
-    "",
-    `🔥 Ambiance au top`,
-    `💸 Prix accessibles`,
-    `🤝 Bon service`,
-    "",
-    `Écris-moi pour plus d'infos ou une réservation.`,
-  ]
-    .filter(Boolean)
-    .join("\n");
+function clean(v: string) {
+  const s = (v ?? "").trim();
+  return s.length ? s : "";
 }
 
-export default function AdminPlacesPage() {
+export default function AdminAddPlacePage() {
   const [name, setName] = useState("");
-  const [category, setCategory] = useState<Category>("bar_resto");
+  const [category, setCategory] = useState("Bar/Resto");
   const [location, setLocation] = useState("");
-  const [image, setImage] = useState("");
-  const [mediaUrls, setMediaUrls] = useState<string[]>([""]);
   const [whatsapp, setWhatsapp] = useState("");
   const [description, setDescription] = useState("");
   const [isFeatured, setIsFeatured] = useState(false);
-  const [featuredRank, setFeaturedRank] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [featuredRank, setFeaturedRank] = useState<number>(0);
 
-  const generateDescription = () => {
-    setDescription(generateWhatsAppDescription(name, category, location));
+  // médias (déjà)
+  const [media, setMedia] = useState<string[]>([""]);
+
+  // ✅ nouveaux champs
+  const [mapsUrl, setMapsUrl] = useState("");
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [tiktokUrl, setTiktokUrl] = useState("");
+
+  const setMediaAt = (i: number, val: string) => {
+    setMedia((prev) => prev.map((x, idx) => (idx === i ? val : x)));
   };
+  const addMedia = () => setMedia((prev) => (prev.length >= 4 ? prev : [...prev, ""]));
+  const removeMedia = (i: number) =>
+    setMedia((prev) => {
+      const next = prev.filter((_, idx) => idx !== i);
+      return next.length ? next : [""];
+    });
 
-  const addMediaField = () => {
-    if (mediaUrls.length >= 4) return;
-    setMediaUrls([...mediaUrls, ""]);
-  };
-
-  const removeMediaField = (index: number) => {
-    setMediaUrls(mediaUrls.filter((_, i) => i !== index));
-  };
-
-  const submit = async () => {
-    if (!name) {
-      alert("Le nom est obligatoire");
-      return;
+  const uniqMax4 = (arr: string[]) => {
+    const u: string[] = [];
+    for (const x of arr) {
+      const t = (x ?? "").trim();
+      if (t && !u.includes(t)) u.push(t);
     }
+    return u.slice(0, 4);
+  };
 
-    setLoading(true);
-    try {
-      const res = await fetch("/api/admin/places", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          category,
-          location: location || null,
-          image: image || null,
-          media_urls: mediaUrls.filter(Boolean),
-          whatsapp: whatsapp || null,
-          description: description || null,
-          is_featured: isFeatured,
-          featured_rank: featuredRank,
-        }),
-      });
+  const onSubmit = async () => {
+    if (!clean(name)) return alert("Nom manquant");
 
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        alert("Erreur : " + (data?.error || "Impossible"));
-        return;
-      }
+    const media_urls = uniqMax4(media);
+    const image = media_urls[0] || null;
 
-      alert("✅ Place ajoutée !");
-      setName("");
-      setLocation("");
-      setImage("");
-      setMediaUrls([""]);
-      setWhatsapp("");
-      setDescription("");
-      setIsFeatured(false);
-      setFeaturedRank(0);
-    } finally {
-      setLoading(false);
-    }
+    const payload = {
+      name: clean(name),
+      category,
+      location: clean(location) || null,
+      whatsapp: clean(whatsapp) || null,
+      description: clean(description) || null,
+      is_featured: isFeatured,
+      featured_rank: featuredRank || 0,
+      image,
+      media_urls,
+
+      // ✅ nouveaux champs
+      maps_url: clean(mapsUrl) || null,
+      website_url: clean(websiteUrl) || null,
+      instagram_url: clean(instagramUrl) || null,
+      tiktok_url: clean(tiktokUrl) || null,
+    };
+
+    const res = await fetch("/api/admin/places", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return alert("Erreur : " + (data?.detail || data?.error || "Impossible"));
+
+    alert("✅ Place ajoutée");
+    setName("");
+    setCategory("Bar/Resto");
+    setLocation("");
+    setWhatsapp("");
+    setDescription("");
+    setIsFeatured(false);
+    setFeaturedRank(0);
+    setMedia([""]);
+
+    setMapsUrl("");
+    setWebsiteUrl("");
+    setInstagramUrl("");
+    setTiktokUrl("");
   };
 
   return (
     <main className="min-h-screen bg-black text-white">
-      <div className="max-w-md mx-auto p-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold">Admin • Ajouter une place</h1>
-          <a href="/admin/places/manage" className="underline text-sm">
-            Gérer
+      <div className="max-w-md mx-auto p-4 space-y-4">
+        <header className="flex items-center justify-between">
+          <a
+            href="/admin/places/manage"
+            className="text-sm px-3 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 transition"
+          >
+            ← Gérer Places
           </a>
-        </div>
+          <a
+            href="/places"
+            className="text-sm px-3 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 transition"
+          >
+            Voir Places →
+          </a>
+        </header>
 
-        <div className="mt-6 grid gap-4">
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
+          <div className="font-semibold text-lg">Ajouter une Place</div>
+
           <input
-            className="rounded-xl p-3 bg-white text-black"
+            className="w-full bg-black/40 border border-white/10 rounded-xl p-3"
             placeholder="Nom"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
 
           <select
-            className="rounded-xl p-3 bg-white text-black"
+            className="w-full bg-black/40 border border-white/10 rounded-xl p-3"
             value={category}
-            onChange={(e) => setCategory(e.target.value as Category)}
+            onChange={(e) => setCategory(e.target.value)}
           >
-            <option value="bar_resto">Bar / Resto</option>
-            <option value="loisirs">Loisirs</option>
-            <option value="club">Night Clubs</option>
-            <option value="hotel">Hôtels</option>
+            <option>Bar/Resto</option>
+            <option>Loisirs</option>
+            <option>Night Clubs</option>
+            <option>Hôtels</option>
+            <option>Populaires</option>
           </select>
 
           <input
-            className="rounded-xl p-3 bg-white text-black"
-            placeholder="Lieu"
+            className="w-full bg-black/40 border border-white/10 rounded-xl p-3"
+            placeholder="Localisation"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
           />
 
           <input
-            className="rounded-xl p-3 bg-white text-black"
-            placeholder="Image principale (URL)"
-            value={image}
-            onChange={(e) => setImage(e.target.value)}
-          />
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Médias (max 4)</span>
-              <button type="button" onClick={addMediaField} className="underline text-sm">
-                + Ajouter
-              </button>
-            </div>
-
-            {mediaUrls.map((url, i) => (
-              <div key={i} className="flex gap-2">
-                <input
-                  className="flex-1 rounded-xl p-3 bg-white text-black"
-                  placeholder={`Média ${i + 1}`}
-                  value={url}
-                  onChange={(e) => {
-                    const copy = [...mediaUrls];
-                    copy[i] = e.target.value;
-                    setMediaUrls(copy);
-                  }}
-                />
-                <button type="button" onClick={() => removeMediaField(i)} className="text-red-400">
-                  ✕
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <input
-            className="rounded-xl p-3 bg-white text-black"
+            className="w-full bg-black/40 border border-white/10 rounded-xl p-3"
             placeholder="WhatsApp"
             value={whatsapp}
             onChange={(e) => setWhatsapp(e.target.value)}
           />
 
-          <div className="flex items-center justify-between gap-3">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={isFeatured}
-                onChange={(e) => setIsFeatured(e.target.checked)}
-              />
-              Mettre en avant
-            </label>
-
-            <input
-              type="number"
-              className="w-24 rounded-xl p-2 bg-white text-black"
-              value={featuredRank}
-              onChange={(e) => setFeaturedRank(Number(e.target.value))}
-              placeholder="Ordre"
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span>Description</span>
-            <button onClick={generateDescription} type="button" className="underline text-sm">
-              Générer
-            </button>
-          </div>
-
           <textarea
-            className="rounded-xl p-3 bg-white text-black min-h-[140px]"
+            className="w-full bg-black/40 border border-white/10 rounded-xl p-3 min-h-[90px]"
+            placeholder="Description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
 
+          {/* ✅ nouveaux liens */}
+          <div className="rounded-2xl border border-white/10 bg-black/30 p-3 space-y-2">
+            <div className="text-sm font-semibold">Liens (boutons sur Détails)</div>
+
+            <input
+              className="w-full bg-black/40 border border-white/10 rounded-xl p-3"
+              placeholder="Adresse (Google Maps URL)"
+              value={mapsUrl}
+              onChange={(e) => setMapsUrl(e.target.value)}
+            />
+            <input
+              className="w-full bg-black/40 border border-white/10 rounded-xl p-3"
+              placeholder="Page web (URL)"
+              value={websiteUrl}
+              onChange={(e) => setWebsiteUrl(e.target.value)}
+            />
+            <input
+              className="w-full bg-black/40 border border-white/10 rounded-xl p-3"
+              placeholder="Instagram (URL)"
+              value={instagramUrl}
+              onChange={(e) => setInstagramUrl(e.target.value)}
+            />
+            <input
+              className="w-full bg-black/40 border border-white/10 rounded-xl p-3"
+              placeholder="TikTok (URL)"
+              value={tiktokUrl}
+              onChange={(e) => setTiktokUrl(e.target.value)}
+            />
+          </div>
+
+          {/* médias */}
+          <div className="rounded-2xl border border-white/10 bg-black/30 p-3 space-y-2">
+            <div className="text-sm font-semibold">Médias (max 4)</div>
+            {media.map((m, i) => (
+              <div key={i} className="flex gap-2">
+                <input
+                  className="flex-1 bg-black/40 border border-white/10 rounded-xl p-3"
+                  placeholder={`URL média ${i + 1}`}
+                  value={m}
+                  onChange={(e) => setMediaAt(i, e.target.value)}
+                />
+                {media.length > 1 && (
+                  <button
+                    onClick={() => removeMedia(i)}
+                    className="px-3 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              onClick={addMedia}
+              disabled={media.length >= 4}
+              className="w-full py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 disabled:opacity-50"
+            >
+              + Ajouter un média
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={isFeatured}
+              onChange={(e) => setIsFeatured(e.target.checked)}
+            />
+            <span className="text-sm">Mettre en avant</span>
+          </div>
+
+          <input
+            type="number"
+            className="w-full bg-black/40 border border-white/10 rounded-xl p-3"
+            placeholder="Ordre (featured_rank)"
+            value={featuredRank}
+            onChange={(e) => setFeaturedRank(Number(e.target.value))}
+          />
+
           <button
-            onClick={submit}
-            disabled={loading}
-            className="bg-white text-black rounded-xl py-3 font-semibold disabled:opacity-60"
+            onClick={onSubmit}
+            className="w-full bg-white text-black rounded-xl py-3 font-semibold"
           >
-            {loading ? "..." : "Ajouter"}
+            Ajouter
           </button>
         </div>
       </div>
