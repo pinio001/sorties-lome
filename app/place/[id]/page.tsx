@@ -20,21 +20,24 @@ type PlaceItem = {
   featured_rank: number | null;
   interest_count: number | null;
 
+  // ✅ optionnel : si tu ajoutes ce champ plus tard en DB ça fonctionnera direct
+  is_whatsapp?: boolean | null;
+
   maps_url?: string | null;
   website_url?: string | null;
   instagram_url?: string | null;
   tiktok_url?: string | null;
 };
 
-function normalizePhoneToWa(phone: string) {
-  const cleaned = phone.replace(/[^\d+]/g, "");
-  return cleaned.startsWith("+") ? cleaned.slice(1) : cleaned;
+function normalizePhoneDigits(raw: string) {
+  // garde + et chiffres
+  return raw.replace(/[^\d+]/g, "").trim();
 }
 
-function normalizePhoneToTel(phone: string) {
-  // tel: accepte bien mieux les digits (+ optionnel)
-  const cleaned = phone.replace(/[^\d+]/g, "");
-  return cleaned;
+function normalizePhoneToWa(raw: string) {
+  // wa.me préfère sans "+"
+  const cleaned = normalizePhoneDigits(raw);
+  return cleaned.startsWith("+") ? cleaned.slice(1) : cleaned;
 }
 
 function categoryLabel(raw: string | null) {
@@ -68,7 +71,9 @@ function getOrCreateDeviceId() {
 
 function cleanUrl(u?: string | null) {
   const s = (u ?? "").trim();
-  return s.length ? s : null;
+  if (!s) return null;
+  if (/^https?:\/\//i.test(s)) return s;
+  return `https://${s}`;
 }
 
 export default function PlaceDetailPage() {
@@ -100,7 +105,11 @@ export default function PlaceDetailPage() {
         setErrorMsg(error.message);
         setPlace(null);
       } else {
-        setPlace(data as any);
+        const p = data as any;
+        setPlace({
+          ...(p as PlaceItem),
+          media_urls: Array.isArray(p.media_urls) ? p.media_urls : [],
+        });
       }
 
       setLoading(false);
@@ -118,31 +127,29 @@ export default function PlaceDetailPage() {
     return Array.from(new Set(merged)).slice(0, 4);
   }, [place]);
 
-  // ✅ WhatsApp link (si numéro compatible)
-  const waLink = useMemo(() => {
+  const waLinkWeb = useMemo(() => {
     if (!place?.whatsapp) return null;
     return `https://wa.me/${normalizePhoneToWa(place.whatsapp)}?text=${encodeURIComponent(
       `Bonsoir, je veux des infos sur: ${place.name ?? "cette place"}`
     )}`;
   }, [place]);
 
-  // ✅ Lien téléphone fallback (appel normal)
-  const telLink = useMemo(() => {
+  const waDeepLink = useMemo(() => {
     if (!place?.whatsapp) return null;
-    const n = normalizePhoneToTel(place.whatsapp);
-    if (!n) return null;
-    return `tel:${n}`;
+    const phone = normalizePhoneDigits(place.whatsapp);
+    const text = encodeURIComponent(
+      `Bonsoir, je veux des infos sur: ${place.name ?? "cette place"}`
+    );
+    // Deep link mobile (ouvre l’app si installée)
+    return `whatsapp://send?phone=${phone}&text=${text}`;
   }, [place]);
 
-  // ✅ Détecter si WA est installé (mobile) sinon fallback tel:
-  // (WhatsApp Web marche aussi sur desktop, mais si le numéro n'est pas WA, tu veux appeler)
-  const canPreferWhatsApp = useMemo(() => {
-    // Heuristique simple :
-    // - si ça ressemble à un vrai numéro (>= 8 digits), on propose WA + fallback appel
-    const raw = place?.whatsapp ?? "";
-    const digits = raw.replace(/[^\d]/g, "");
-    return digits.length >= 8;
-  }, [place?.whatsapp]);
+  const telLink = useMemo(() => {
+    if (!place?.whatsapp) return null;
+    const phone = normalizePhoneDigits(place.whatsapp);
+    if (!phone) return null;
+    return `tel:${phone}`;
+  }, [place]);
 
   const shareText = useMemo(() => {
     if (!place) return "";
@@ -151,7 +158,6 @@ export default function PlaceDetailPage() {
       `✨ *${place.name}*`,
       `📌 Catégorie : ${categoryLabel(place.category)}`,
       place.location ? `📍 Lieu : ${place.location}` : "",
-      place.description ? "" : "",
       place.description ? place.description : "",
       "",
       `👉 Détails : ${url}`,
@@ -217,19 +223,52 @@ export default function PlaceDetailPage() {
 
   const openExternal = (u: string) => window.open(u, "_blank", "noreferrer");
 
+  // ✅ NOUVEAU : bouton "Contacter sur WhatsApp" -> si is_whatsapp=false => tel:
   const handleContact = () => {
-    // ✅ Si WA link existe -> tenter WhatsApp
-    // ✅ Sinon, fallback tel:
-    if (waLink && canPreferWhatsApp) {
-      window.open(waLink, "_blank", "noreferrer");
+    if (!place?.whatsapp) {
+      alert("Numéro non disponible.");
       return;
     }
-    if (telLink) {
-      // tel: doit être dans window.location pour ouvrir l'app téléphone sur mobile
-      window.location.href = telLink;
+
+    // Si tu as le champ is_whatsapp et qu’il est false -> appel direct
+    if (place.is_whatsapp === false) {
+      if (telLink) window.location.href = telLink;
+      else alert("Numéro invalide.");
       return;
     }
-    alert("Numéro non disponible.");
+
+    // Sinon : on tente WhatsApp (deep link sur mobile), puis fallback tel si ça n'ouvre pas
+    const fallback = () => {
+      if (telLink) window.location.href = telLink;
+      else window.open(waLinkWeb || "", "_blank", "noreferrer");
+    };
+
+    // fallback auto si WhatsApp ne s'ouvre pas (pas installé)
+    let timer: any = null;
+    const onVis = () => {
+      if (document.visibilityState === "hidden") {
+        if (timer) clearTimeout(timer);
+        document.removeEventListener("visibilitychange", onVis);
+      }
+    };
+    document.addEventListener("visibilitychange", onVis);
+
+    timer = setTimeout(() => {
+      document.removeEventListener("visibilitychange", onVis);
+      if (document.visibilityState === "visible") {
+        // WhatsApp ne s'est pas ouvert => appel
+        fallback();
+      }
+    }, 900);
+
+    // tenter deep link (mobile), sinon web
+    if (waDeepLink) {
+      window.location.href = waDeepLink;
+    } else if (waLinkWeb) {
+      window.open(waLinkWeb, "_blank", "noreferrer");
+    } else {
+      fallback();
+    }
   };
 
   if (loading) {
@@ -360,22 +399,12 @@ export default function PlaceDetailPage() {
         )}
 
         <div className="mt-5 grid gap-2">
-          {/* ✅ Nouveau comportement : si pas WhatsApp -> appel normal */}
-          {(waLink || telLink) ? (
-            <button
-              onClick={handleContact}
-              className="text-center bg-black text-white py-3 rounded-xl font-medium border border-white/20 hover:bg-white/10"
-            >
-              Contacter
-            </button>
-          ) : (
-            <button
-              className="text-center bg-white/5 text-white/40 py-3 rounded-xl border border-white/10 cursor-not-allowed"
-              disabled
-            >
-              Contact non disponible
-            </button>
-          )}
+          <button
+            onClick={handleContact}
+            className="text-center bg-black text-white py-3 rounded-xl font-medium border border-white/20 hover:bg-white/10"
+          >
+            Contacter sur WhatsApp
+          </button>
 
           <button
             onClick={handleShare}
@@ -391,16 +420,6 @@ export default function PlaceDetailPage() {
           >
             {liked ? "❤️ Intéressé(e)" : likeLoading ? "..." : "❤️ Intéressé(e)"}
           </button>
-
-          {/* (optionnel) lien "Appeler" visible si tu veux l'afficher séparément */}
-          {/* {telLink && (
-            <a
-              href={telLink}
-              className="text-center border border-white/20 text-white py-3 rounded-xl hover:bg-white/10"
-            >
-              Appeler
-            </a>
-          )} */}
         </div>
       </div>
     </main>
