@@ -1,59 +1,59 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
+  const router = useRouter();
   const [code, setCode] = useState("");
-  const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setMsg(null);
+  const onSubmit = async () => {
     setLoading(true);
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ code }),
+      });
 
-    const res = await fetch("/api/admin/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code }),
-    });
+      const data = await res.json().catch(() => ({}));
 
-    setLoading(false);
+      if (!res.ok) {
+        alert("Erreur : " + (data?.error || "Impossible"));
+        return;
+      }
 
-    if (!res.ok) {
-      setMsg("Code incorrect.");
-      return;
+      router.push("/admin");
+    } finally {
+      setLoading(false);
     }
-
-    // redirection vers /admin
-    window.location.href = "/admin";
   };
 
   return (
-    <main className="p-4 max-w-md mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Accès Admin</h1>
+    <main className="min-h-screen bg-black text-white flex items-center justify-center p-4">
+      <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="text-lg font-semibold">Connexion Admin</div>
+        <p className="text-sm text-white/60 mt-1">
+          Entre le code d’accès.
+        </p>
 
-      <form onSubmit={submit} className="space-y-3">
         <input
-          className="w-full border rounded-lg p-2"
-          placeholder="Code secret"
+          className="w-full mt-4 bg-black/40 border border-white/10 rounded-xl p-3"
+          placeholder="Code admin"
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          type="password"
-          autoFocus
-          required
         />
 
         <button
-          className="w-full bg-black text-white py-2 rounded-lg disabled:opacity-60"
+          onClick={onSubmit}
           disabled={loading}
-          type="submit"
+          className="w-full mt-3 bg-white text-black rounded-xl py-3 font-semibold disabled:opacity-60"
         >
-          {loading ? "Vérification..." : "Entrer"}
+          {loading ? "..." : "Se connecter"}
         </button>
-
-        {msg && <p className="text-sm text-red-600">{msg}</p>}
-      </form>
+      </div>
     </main>
   );
 }

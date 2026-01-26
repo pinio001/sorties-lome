@@ -171,7 +171,7 @@ export default function PlacesPage() {
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Recherche…"
+                placeholder="Recherche une place"
                 className="col-span-2 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/40"
               />
 
