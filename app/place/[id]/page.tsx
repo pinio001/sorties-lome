@@ -20,7 +20,6 @@ type PlaceItem = {
   featured_rank: number | null;
   interest_count: number | null;
 
-  // ✅ nouveaux champs
   maps_url?: string | null;
   website_url?: string | null;
   instagram_url?: string | null;
@@ -30,6 +29,12 @@ type PlaceItem = {
 function normalizePhoneToWa(phone: string) {
   const cleaned = phone.replace(/[^\d+]/g, "");
   return cleaned.startsWith("+") ? cleaned.slice(1) : cleaned;
+}
+
+function normalizePhoneToTel(phone: string) {
+  // tel: accepte bien mieux les digits (+ optionnel)
+  const cleaned = phone.replace(/[^\d+]/g, "");
+  return cleaned;
 }
 
 function categoryLabel(raw: string | null) {
@@ -48,7 +53,11 @@ function getOrCreateDeviceId() {
   try {
     v = localStorage.getItem(key) || "";
     if (!v) {
-      v = "dev_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+      v =
+        "dev_" +
+        Math.random().toString(16).slice(2) +
+        "_" +
+        Date.now().toString(16);
       localStorage.setItem(key, v);
     }
   } catch {
@@ -81,7 +90,11 @@ export default function PlaceDetailPage() {
       setLoading(true);
       setErrorMsg(null);
 
-      const { data, error } = await supabase.from("places").select("*").eq("id", placeId).single();
+      const { data, error } = await supabase
+        .from("places")
+        .select("*")
+        .eq("id", placeId)
+        .single();
 
       if (error) {
         setErrorMsg(error.message);
@@ -105,12 +118,31 @@ export default function PlaceDetailPage() {
     return Array.from(new Set(merged)).slice(0, 4);
   }, [place]);
 
+  // ✅ WhatsApp link (si numéro compatible)
   const waLink = useMemo(() => {
     if (!place?.whatsapp) return null;
     return `https://wa.me/${normalizePhoneToWa(place.whatsapp)}?text=${encodeURIComponent(
       `Bonsoir, je veux des infos sur: ${place.name ?? "cette place"}`
     )}`;
   }, [place]);
+
+  // ✅ Lien téléphone fallback (appel normal)
+  const telLink = useMemo(() => {
+    if (!place?.whatsapp) return null;
+    const n = normalizePhoneToTel(place.whatsapp);
+    if (!n) return null;
+    return `tel:${n}`;
+  }, [place]);
+
+  // ✅ Détecter si WA est installé (mobile) sinon fallback tel:
+  // (WhatsApp Web marche aussi sur desktop, mais si le numéro n'est pas WA, tu veux appeler)
+  const canPreferWhatsApp = useMemo(() => {
+    // Heuristique simple :
+    // - si ça ressemble à un vrai numéro (>= 8 digits), on propose WA + fallback appel
+    const raw = place?.whatsapp ?? "";
+    const digits = raw.replace(/[^\d]/g, "");
+    return digits.length >= 8;
+  }, [place?.whatsapp]);
 
   const shareText = useMemo(() => {
     if (!place) return "";
@@ -172,7 +204,11 @@ export default function PlaceDetailPage() {
       setLiked(true);
 
       if (!data?.already) {
-        setPlace((prev) => (prev ? { ...prev, interest_count: (prev.interest_count ?? 0) + 1 } : prev));
+        setPlace((prev) =>
+          prev
+            ? { ...prev, interest_count: (prev.interest_count ?? 0) + 1 }
+            : prev
+        );
       }
     } finally {
       setLikeLoading(false);
@@ -180,6 +216,21 @@ export default function PlaceDetailPage() {
   };
 
   const openExternal = (u: string) => window.open(u, "_blank", "noreferrer");
+
+  const handleContact = () => {
+    // ✅ Si WA link existe -> tenter WhatsApp
+    // ✅ Sinon, fallback tel:
+    if (waLink && canPreferWhatsApp) {
+      window.open(waLink, "_blank", "noreferrer");
+      return;
+    }
+    if (telLink) {
+      // tel: doit être dans window.location pour ouvrir l'app téléphone sur mobile
+      window.location.href = telLink;
+      return;
+    }
+    alert("Numéro non disponible.");
+  };
 
   if (loading) {
     return (
@@ -194,7 +245,9 @@ export default function PlaceDetailPage() {
     return (
       <main className="p-4 max-w-md mx-auto min-h-screen">
         <BingoBackground />
-        <p className="text-sm text-red-400 mb-4">Erreur: {errorMsg ?? "Introuvable"}</p>
+        <p className="text-sm text-red-400 mb-4">
+          Erreur: {errorMsg ?? "Introuvable"}
+        </p>
         <button
           onClick={() => router.push("/places")}
           className="border border-white/20 text-white px-3 py-2 rounded-xl"
@@ -243,7 +296,9 @@ export default function PlaceDetailPage() {
       )}
 
       <div className="p-4">
-        <div className="text-white/60 text-xs mb-1">{categoryLabel(place.category)}</div>
+        <div className="text-white/60 text-xs mb-1">
+          {categoryLabel(place.category)}
+        </div>
 
         <h1 className="text-2xl font-bold text-white">{place.name}</h1>
 
@@ -258,11 +313,12 @@ export default function PlaceDetailPage() {
         {place.description ? (
           <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
             <div className="text-white font-semibold mb-2">Description</div>
-            <p className="text-sm text-white/75 whitespace-pre-line">{place.description}</p>
+            <p className="text-sm text-white/75 whitespace-pre-line">
+              {place.description}
+            </p>
           </div>
         ) : null}
 
-        {/* ✅ NOUVEAUX BOUTONS */}
         {(maps || website || ig || tt) && (
           <div className="mt-4 grid gap-2">
             {maps && (
@@ -304,21 +360,20 @@ export default function PlaceDetailPage() {
         )}
 
         <div className="mt-5 grid gap-2">
-          {waLink ? (
-            <a
-              href={waLink}
-              target="_blank"
-              rel="noreferrer"
-              className="text-center bg-black text-white py-3 rounded-xl font-medium border border-white/20 cursor-not-allowed"
+          {/* ✅ Nouveau comportement : si pas WhatsApp -> appel normal */}
+          {(waLink || telLink) ? (
+            <button
+              onClick={handleContact}
+              className="text-center bg-black text-white py-3 rounded-xl font-medium border border-white/20 hover:bg-white/10"
             >
-              Contacter sur WhatsApp
-            </a>
+              Contacter
+            </button>
           ) : (
             <button
               className="text-center bg-white/5 text-white/40 py-3 rounded-xl border border-white/10 cursor-not-allowed"
               disabled
             >
-              WhatsApp non disponible
+              Contact non disponible
             </button>
           )}
 
@@ -336,6 +391,16 @@ export default function PlaceDetailPage() {
           >
             {liked ? "❤️ Intéressé(e)" : likeLoading ? "..." : "❤️ Intéressé(e)"}
           </button>
+
+          {/* (optionnel) lien "Appeler" visible si tu veux l'afficher séparément */}
+          {/* {telLink && (
+            <a
+              href={telLink}
+              className="text-center border border-white/20 text-white py-3 rounded-xl hover:bg-white/10"
+            >
+              Appeler
+            </a>
+          )} */}
         </div>
       </div>
     </main>
