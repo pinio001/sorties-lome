@@ -1,5 +1,6 @@
 import "./globals.css";
 import { Outfit } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -15,6 +16,7 @@ export default function RootLayout({
     <html lang="fr">
       <body className={`${outfit.className} bg-black text-white`}>
         {children}
+        <Analytics />
       </body>
     </html>
   );
