@@ -154,7 +154,7 @@ export default function PlacesPage() {
                 Où sortir à Lomé ?
               </h1>
               <p className="text-sm text-white/60 mt-1">
-                Explorez ces spots, retrouvez un endroit branché et profitez ! Recherchez par lieu au besoin              </p>
+                Meilleurs spots de Lomé ! Trouvez votre bonheur ! Recherchez par lieu au besoin              </p>
             </div>
 
             <button
