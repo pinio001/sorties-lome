@@ -3,9 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
 
-function requireAdmin() {
-  const c = cookies();
-  return c.get("admin_auth")?.value === "1";
+async function requireAdmin() {
+  const store = await cookies();
+  return store.get("admin_auth")?.value === "1";
 }
 
 function clamp(n: number, a: number, b: number) {
@@ -14,7 +14,7 @@ function clamp(n: number, a: number, b: number) {
 
 export async function GET(req: NextRequest) {
   try {
-    if (!requireAdmin()) {
+    if (!(await requireAdmin())) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -135,10 +135,7 @@ export async function GET(req: NextRequest) {
       ok: true,
       days,
       since: since.toISOString(),
-      totals: {
-        views: totalViews,
-        unique_visitors: uniqueVisitors,
-      },
+      totals: { views: totalViews, unique_visitors: uniqueVisitors },
       topPages,
       topPlaces,
       topEvents,
