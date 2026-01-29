@@ -1,5 +1,7 @@
+// app/layout.tsx
 import "./globals.css";
 import { Outfit } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -15,6 +17,7 @@ export default function RootLayout({
     <html lang="fr">
       <body className={`${outfit.className} bg-black text-white`}>
         {children}
+        <Analytics />
       </body>
     </html>
   );

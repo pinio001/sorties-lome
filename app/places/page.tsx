@@ -4,6 +4,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import BingoBackground from "../components/BingoBackground";
+import { trackPageView } from "../../lib/trackViewClient";
+
+
+
 
 type PlaceCategory = "bar_resto" | "loisirs" | "club" | "hotel";
 
@@ -64,6 +68,10 @@ export default function PlacesPage() {
   const [q, setQ] = useState("");
   const [loc, setLoc] = useState("TOUS");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  
+  useEffect(() => {
+    trackPageView();
+  }, []);  
 
   useEffect(() => {
     const load = async () => {

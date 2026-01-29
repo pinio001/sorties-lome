@@ -4,6 +4,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import BingoBackground from "../components/BingoBackground";
+import { trackPageView } from "../../lib/trackViewClient";
+
+
 
 type EventItem = {
   id: string;
@@ -79,6 +82,10 @@ export default function EventsPage() {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TabKey>("all");
+
+  useEffect(() => {
+    trackPageView();
+  }, []);
 
   useEffect(() => {
     const load = async () => {

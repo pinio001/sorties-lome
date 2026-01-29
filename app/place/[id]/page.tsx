@@ -6,6 +6,9 @@ import { supabase } from "../../../lib/supabaseClient";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import BingoBackground from "../../components/BingoBackground";
 import MediaCarousel from "../../components/MediaCaroussel";
+import { trackPageView } from "../../../lib/trackViewClient";
+
+
 
 type PlaceItem = {
   id: string;
@@ -123,6 +126,11 @@ export default function PlaceDetailPage() {
 
   const [likeLoading, setLikeLoading] = useState(false);
   const [liked, setLiked] = useState(false);
+
+  useEffect(() => {
+    trackPageView({ entity_type: "place", entity_id: String(placeId) });
+  }, [placeId]);
+
 
   useEffect(() => {
     const load = async () => {

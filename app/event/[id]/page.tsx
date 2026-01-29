@@ -6,6 +6,9 @@ import { supabase } from "../../../lib/supabaseClient";
 import { useParams, useRouter } from "next/navigation";
 import BingoBackground from "../../components/BingoBackground";
 import MediaCarousel from "../../components/MediaCaroussel";
+import { trackPageView } from "../../../lib/trackViewClient";
+
+
 
 type EventItem = {
   id: string;
@@ -79,6 +82,11 @@ export default function EventDetailPage() {
   const [liked, setLiked] = useState(false);
 
   const eventId = params?.id;
+  
+  useEffect(() => {
+    trackPageView({ entity_type: "event", entity_id: String(eventId) });
+  }, [eventId]);
+
 
   useEffect(() => {
     const loadEvent = async () => {
