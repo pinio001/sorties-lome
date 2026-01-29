@@ -1,165 +1,151 @@
 // app/api/admin/stats/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { supabaseAdmin } from "../../../../lib/supabaseAdmin";
 
-async function requireAdmin() {
-  const store = await cookies();
-  return store.get("admin_auth")?.value === "1";
+function requireAdmin() {
+  const c = cookies();
+  return c.get("admin_auth")?.value === "1";
 }
 
-function sinceDays(days: number) {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  return d.toISOString();
+function clamp(n: number, a: number, b: number) {
+  return Math.max(a, Math.min(b, n));
 }
 
-type ClickRow = {
-  entity_type: "place" | "event";
-  entity_id: string;
-  click_type: "whatsapp" | "maps" | "website" | "instagram" | "tiktok";
-  utm_source: string | null;
-  created_at: string;
-};
-
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    if (!(await requireAdmin())) {
+    if (!requireAdmin()) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const from30 = sinceDays(30);
-    const from7 = sinceDays(7);
+    const url = new URL(req.url);
+    const days = clamp(Number(url.searchParams.get("days") || "30"), 1, 90);
 
-    const { data: rows30, error: err30 } = await supabaseAdmin
-      .from("click_events")
-      .select("entity_type,entity_id,click_type,utm_source,created_at")
-      .gte("created_at", from30)
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+
+    const { data, error } = await supabaseAdmin
+      .from("page_views")
+      .select("created_at,path,device_id,entity_type,entity_id")
+      .gte("created_at", since.toISOString())
+      .order("created_at", { ascending: false })
       .limit(50000);
 
-    if (err30) {
-      return NextResponse.json(
-        { error: "Erreur serveur", detail: err30.message },
-        { status: 500 }
-      );
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const { data: rows7, error: err7 } = await supabaseAdmin
-      .from("click_events")
-      .select("entity_type,entity_id,click_type,utm_source,created_at")
-      .gte("created_at", from7)
-      .limit(50000);
+    const rows =
+      (data ?? []).map((r: any) => ({
+        created_at: r.created_at as string,
+        path: (r.path || "/") as string,
+        device_id: (r.device_id || "") as string,
+        entity_type: (r.entity_type || null) as "place" | "event" | null,
+        entity_id: (r.entity_id || null) as string | null,
+      })) || [];
 
-    if (err7) {
-      return NextResponse.json(
-        { error: "Erreur serveur", detail: err7.message },
-        { status: 500 }
-      );
+    const totalViews = rows.length;
+    const uniqueVisitors = new Set(rows.map((r) => r.device_id).filter(Boolean))
+      .size;
+
+    const byPath = new Map<string, number>();
+    for (const r of rows) {
+      const p = r.path || "/";
+      byPath.set(p, (byPath.get(p) || 0) + 1);
     }
 
-    const list30 = (rows30 ?? []) as ClickRow[];
-    const list7 = (rows7 ?? []) as ClickRow[];
+    const topPages = Array.from(byPath.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 15)
+      .map(([path, count]) => ({ path, count }));
 
-    const totals30: Record<string, number> = {
-      total: 0,
-      whatsapp: 0,
-      maps: 0,
-      website: 0,
-      instagram: 0,
-      tiktok: 0,
-    };
+    const detailsRows = rows.filter(
+      (r) => (r.entity_type === "place" || r.entity_type === "event") && r.entity_id
+    );
 
-    for (const r of list30) {
-      totals30.total += 1;
-      totals30[r.click_type] = (totals30[r.click_type] ?? 0) + 1;
-    }
+    const placeCounts = new Map<string, number>();
+    const eventCounts = new Map<string, number>();
 
-    const totals7: Record<string, number> = {
-      total: 0,
-      whatsapp: 0,
-      maps: 0,
-      website: 0,
-      instagram: 0,
-      tiktok: 0,
-    };
-
-    for (const r of list7) {
-      totals7.total += 1;
-      totals7[r.click_type] = (totals7[r.click_type] ?? 0) + 1;
-    }
-
-    // Top sources (30j)
-    const srcMap = new Map<string, number>();
-    for (const r of list30) {
-      const s = (r.utm_source ?? "direct").trim() || "direct";
-      srcMap.set(s, (srcMap.get(s) ?? 0) + 1);
-    }
-    const topSources = Array.from(srcMap.entries())
-      .map(([utm_source, clicks]) => ({ utm_source, clicks }))
-      .sort((a, b) => b.clicks - a.clicks)
-      .slice(0, 10);
-
-    // Top places (WhatsApp & Maps)
-    const placeWhats = new Map<string, number>();
-    const placeMaps = new Map<string, number>();
-
-    for (const r of list30) {
-      if (r.entity_type !== "place") continue;
-      if (r.click_type === "whatsapp") {
-        placeWhats.set(r.entity_id, (placeWhats.get(r.entity_id) ?? 0) + 1);
+    for (const r of detailsRows) {
+      if (r.entity_type === "place" && r.entity_id) {
+        placeCounts.set(r.entity_id, (placeCounts.get(r.entity_id) || 0) + 1);
       }
-      if (r.click_type === "maps") {
-        placeMaps.set(r.entity_id, (placeMaps.get(r.entity_id) ?? 0) + 1);
+      if (r.entity_type === "event" && r.entity_id) {
+        eventCounts.set(r.entity_id, (eventCounts.get(r.entity_id) || 0) + 1);
       }
     }
 
-    const topPlaceWhatsappIds = Array.from(placeWhats.entries())
+    const topPlaceIds = Array.from(placeCounts.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
       .map(([id]) => id);
 
-    const topPlaceMapsIds = Array.from(placeMaps.entries())
+    const topEventIds = Array.from(eventCounts.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
       .map(([id]) => id);
 
-    const allPlaceIds = Array.from(new Set([...topPlaceWhatsappIds, ...topPlaceMapsIds]));
+    const [placesRes, eventsRes] = await Promise.all([
+      topPlaceIds.length
+        ? supabaseAdmin.from("places").select("id,name").in("id", topPlaceIds)
+        : Promise.resolve({ data: [], error: null } as any),
+      topEventIds.length
+        ? supabaseAdmin.from("events").select("id,title").in("id", topEventIds)
+        : Promise.resolve({ data: [], error: null } as any),
+    ]);
 
-    let placeNameById: Record<string, string> = {};
-    if (allPlaceIds.length) {
-      const { data: places, error: pErr } = await supabaseAdmin
-        .from("places")
-        .select("id,name")
-        .in("id", allPlaceIds);
-
-      if (!pErr && places) {
-        for (const p of places as any[]) {
-          placeNameById[p.id] = p.name ?? "Sans nom";
-        }
-      }
+    if (placesRes?.error) {
+      return NextResponse.json({ error: placesRes.error.message }, { status: 500 });
+    }
+    if (eventsRes?.error) {
+      return NextResponse.json({ error: eventsRes.error.message }, { status: 500 });
     }
 
-    const topPlacesWhatsapp = Array.from(placeWhats.entries())
-      .map(([id, clicks]) => ({ id, name: placeNameById[id] ?? id, clicks }))
-      .sort((a, b) => b.clicks - a.clicks)
-      .slice(0, 10);
+    const placeNameById = new Map<string, string>();
+    for (const p of placesRes.data ?? []) {
+      placeNameById.set(p.id, p.name ?? "Sans nom");
+    }
 
-    const topPlacesMaps = Array.from(placeMaps.entries())
-      .map(([id, clicks]) => ({ id, name: placeNameById[id] ?? id, clicks }))
-      .sort((a, b) => b.clicks - a.clicks)
-      .slice(0, 10);
+    const eventTitleById = new Map<string, string>();
+    for (const e of eventsRes.data ?? []) {
+      eventTitleById.set(e.id, e.title ?? "Sans titre");
+    }
+
+    const topPlaces = Array.from(placeCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([id, count]) => ({
+        id,
+        name: placeNameById.get(id) || "Place",
+        count,
+        href: `/place/${id}`,
+      }));
+
+    const topEvents = Array.from(eventCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([id, count]) => ({
+        id,
+        title: eventTitleById.get(id) || "Event",
+        count,
+        href: `/event/${id}`,
+      }));
 
     return NextResponse.json({
       ok: true,
-      totals30,
-      totals7,
-      topSources,
-      topPlacesWhatsapp,
-      topPlacesMaps,
+      days,
+      since: since.toISOString(),
+      totals: {
+        views: totalViews,
+        unique_visitors: uniqueVisitors,
+      },
+      topPages,
+      topPlaces,
+      topEvents,
     });
   } catch (e: any) {
     return NextResponse.json(
-      { error: "Erreur serveur", detail: e?.message || String(e) },
+      { error: e?.message || "Server error" },
       { status: 500 }
     );
   }

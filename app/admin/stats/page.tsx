@@ -1,171 +1,277 @@
 // app/admin/stats/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import BingoBackground from "../../components/BingoBackground";
 
-type Stats = {
-  totals30: Record<string, number>;
-  totals7: Record<string, number>;
-  topSources: { utm_source: string; clicks: number }[];
-  topPlacesWhatsapp: { id: string; name: string; clicks: number }[];
-  topPlacesMaps: { id: string; name: string; clicks: number }[];
+type StatsPayload = {
+  ok: boolean;
+  days: number;
+  since: string;
+  totals: { views: number; unique_visitors: number };
+  topPages: { path: string; count: number }[];
+  topPlaces: { id: string; name: string; count: number; href: string }[];
+  topEvents: { id: string; title: string; count: number; href: string }[];
+  error?: string;
 };
 
+function fmt(n: number) {
+  try {
+    return n.toLocaleString("fr-FR");
+  } catch {
+    return String(n);
+  }
+}
+
 export default function AdminStatsPage() {
+  const [days, setDays] = useState<7 | 30>(30);
   const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<StatsPayload | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [stats, setStats] = useState<Stats | null>(null);
+
+  const load = async (d: number) => {
+    setLoading(true);
+    setErr(null);
+    try {
+      const res = await fetch(`/api/admin/stats?days=${d}`, {
+        cache: "no-store",
+      });
+
+      const txt = await res.text();
+      const json = txt ? JSON.parse(txt) : {};
+
+      if (!res.ok) {
+        setErr(json?.error || "Erreur serveur");
+        setData(null);
+      } else {
+        setData(json);
+      }
+    } catch (e: any) {
+      setErr(e?.message || "Erreur");
+      setData(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      setErr(null);
+    load(days);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [days]);
 
-      try {
-        const res = await fetch("/api/admin/stats", { credentials: "include" });
-        const text = await res.text();
-        const data = text ? JSON.parse(text) : {};
-
-        if (!res.ok) {
-          setErr(data?.error || "Erreur");
-          setStats(null);
-          return;
-        }
-
-        setStats(data);
-      } catch (e: any) {
-        setErr(e?.message || "Erreur");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    load();
-  }, []);
-
-  const card = (title: string, value: any) => (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-      <div className="text-xs text-white/60">{title}</div>
-      <div className="text-2xl font-extrabold text-white mt-1">{value}</div>
-    </div>
-  );
+  const sinceText = useMemo(() => {
+    if (!data?.since) return "";
+    try {
+      const d = new Date(data.since);
+      return d.toLocaleDateString("fr-FR", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+    } catch {
+      return "";
+    }
+  }, [data?.since]);
 
   return (
-    <main className="min-h-screen bg-black text-white">
-      <div className="max-w-md mx-auto p-4 space-y-4">
-        <header className="flex items-center justify-between">
-          <a
-            href="/admin"
-            className="text-sm px-3 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 transition"
-          >
-            ← Admin
-          </a>
-          <a
-            href="/places"
-            className="text-sm px-3 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 transition"
-          >
-            Voir Places →
-          </a>
-        </header>
+    <main className="min-h-screen">
+      <BingoBackground />
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-          <div className="text-lg font-semibold">Stats (clics)</div>
-          <div className="text-sm text-white/60">
-            Tracking WhatsApp / Adresse / Liens • 7 jours & 30 jours
+      <div className="max-w-3xl mx-auto px-4 pt-6 pb-16">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-2xl bg-white text-black font-bold flex items-center justify-center shadow-lg">
+              <span className="font-black text-xl tracking-tight">B</span>
+            </div>
+            <div>
+              <div className="text-white font-semibold">Bingo</div>
+              <div className="text-xs text-white/60">Admin • Stats</div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <a
+              href="/"
+              className="text-sm border border-white/20 px-3 py-2 rounded-xl text-white hover:bg-white/10"
+            >
+              Accueil
+            </a>
+            <a
+              href="/admin"
+              className="text-sm border border-white/20 px-3 py-2 rounded-xl text-white hover:bg-white/10"
+            >
+              Admin
+            </a>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4 mb-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              <div className="text-white font-semibold">Analytique (visites)</div>
+              <div className="text-xs text-white/60">
+                Période : {days} jours {sinceText ? `• depuis ${sinceText}` : ""}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setDays(7)}
+                className={`px-3 py-2 rounded-xl text-sm border transition ${
+                  days === 7
+                    ? "bg-white text-black"
+                    : "border-white/20 text-white hover:bg-white/10"
+                }`}
+              >
+                7 jours
+              </button>
+              <button
+                onClick={() => setDays(30)}
+                className={`px-3 py-2 rounded-xl text-sm border transition ${
+                  days === 30
+                    ? "bg-white text-black"
+                    : "border-white/20 text-white hover:bg-white/10"
+                }`}
+              >
+                30 jours
+              </button>
+
+              <button
+                onClick={() => load(days)}
+                className="px-3 py-2 rounded-xl text-sm border border-white/20 text-white hover:bg-white/10"
+              >
+                Rafraîchir
+              </button>
+            </div>
           </div>
         </div>
 
         {loading ? (
-          <div className="text-white/70">Chargement…</div>
+          <div className="text-white/70 mt-6">Chargement…</div>
         ) : err ? (
-          <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-red-200 text-sm">
+          <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-red-200">
             Erreur : {err}
           </div>
-        ) : !stats ? (
-          <div className="text-white/70">Aucune donnée.</div>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-3">
-              {card("Total clics (30j)", stats.totals30?.total ?? 0)}
-              {card("Total clics (7j)", stats.totals7?.total ?? 0)}
-              {card("WhatsApp (30j)", stats.totals30?.whatsapp ?? 0)}
-              {card("Adresse (30j)", stats.totals30?.maps ?? 0)}
+            {/* KPI */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+              <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4">
+                <div className="text-xs text-white/60">Vues totales</div>
+                <div className="text-3xl text-white font-bold mt-1">
+                  {fmt(data?.totals?.views ?? 0)}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4">
+                <div className="text-xs text-white/60">Visiteurs uniques</div>
+                <div className="text-3xl text-white font-bold mt-1">
+                  {fmt(data?.totals?.unique_visitors ?? 0)}
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
-              {card("Web", stats.totals30?.website ?? 0)}
-              {card("Instagram", stats.totals30?.instagram ?? 0)}
-              {card("TikTok", stats.totals30?.tiktok ?? 0)}
+            {/* Top Pages */}
+            <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4 mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-white font-semibold">Top pages</div>
+                <div className="text-xs text-white/60">
+                  {data?.topPages?.length ?? 0} lignes
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {(data?.topPages ?? []).slice(0, 15).map((p) => (
+                  <div
+                    key={p.path}
+                    className="flex items-center justify-between gap-3 border border-white/10 bg-black/20 rounded-xl px-3 py-2"
+                  >
+                    <a
+                      className="text-sm text-white hover:underline break-all"
+                      href={p.path.startsWith("/") ? p.path : `/${p.path}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {p.path}
+                    </a>
+                    <div className="text-sm text-white/70 shrink-0">
+                      {fmt(p.count)}
+                    </div>
+                  </div>
+                ))}
+
+                {(data?.topPages ?? []).length === 0 && (
+                  <div className="text-white/60 text-sm">Aucune donnée.</div>
+                )}
+              </div>
             </div>
 
-            <section className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <div className="font-semibold">Top Places — WhatsApp (30j)</div>
-              <div className="mt-3 space-y-2">
-                {stats.topPlacesWhatsapp?.length ? (
-                  stats.topPlacesWhatsapp.map((x, idx) => (
-                    <div
-                      key={x.id}
-                      className="flex items-center justify-between gap-3 border border-white/10 bg-black/30 rounded-xl px-3 py-2"
-                    >
-                      <div className="min-w-0">
-                        <div className="text-sm text-white truncate">
-                          {idx + 1}. {x.name}
-                        </div>
-                        <div className="text-xs text-white/50 truncate">{x.id}</div>
-                      </div>
-                      <div className="text-sm text-white">❤️ {x.clicks}</div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-sm text-white/60">Aucun clic.</div>
-                )}
-              </div>
-            </section>
+            {/* Top Details */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4">
+                <div className="text-white font-semibold mb-3">
+                  Top places (détails)
+                </div>
 
-            <section className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <div className="font-semibold">Top Places — Adresse (30j)</div>
-              <div className="mt-3 space-y-2">
-                {stats.topPlacesMaps?.length ? (
-                  stats.topPlacesMaps.map((x, idx) => (
+                <div className="space-y-2">
+                  {(data?.topPlaces ?? []).map((p) => (
                     <div
-                      key={x.id}
-                      className="flex items-center justify-between gap-3 border border-white/10 bg-black/30 rounded-xl px-3 py-2"
+                      key={p.id}
+                      className="flex items-center justify-between gap-3 border border-white/10 bg-black/20 rounded-xl px-3 py-2"
                     >
-                      <div className="min-w-0">
-                        <div className="text-sm text-white truncate">
-                          {idx + 1}. {x.name}
-                        </div>
-                        <div className="text-xs text-white/50 truncate">{x.id}</div>
+                      <a
+                        className="text-sm text-white hover:underline break-all"
+                        href={p.href}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {p.name}
+                      </a>
+                      <div className="text-sm text-white/70 shrink-0">
+                        {fmt(p.count)}
                       </div>
-                      <div className="text-sm text-white">📍 {x.clicks}</div>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-sm text-white/60">Aucun clic.</div>
-                )}
-              </div>
-            </section>
+                  ))}
 
-            <section className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <div className="font-semibold">Top sources (utm_source)</div>
-              <div className="mt-3 space-y-2">
-                {stats.topSources?.length ? (
-                  stats.topSources.map((x, idx) => (
-                    <div
-                      key={x.utm_source + idx}
-                      className="flex items-center justify-between gap-3 border border-white/10 bg-black/30 rounded-xl px-3 py-2"
-                    >
-                      <div className="text-sm text-white">
-                        {idx + 1}. {x.utm_source}
-                      </div>
-                      <div className="text-sm text-white">{x.clicks}</div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-sm text-white/60">Aucune source.</div>
-                )}
+                  {(data?.topPlaces ?? []).length === 0 && (
+                    <div className="text-white/60 text-sm">Aucune donnée.</div>
+                  )}
+                </div>
               </div>
-            </section>
+
+              <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4">
+                <div className="text-white font-semibold mb-3">
+                  Top events (détails)
+                </div>
+
+                <div className="space-y-2">
+                  {(data?.topEvents ?? []).map((e) => (
+                    <div
+                      key={e.id}
+                      className="flex items-center justify-between gap-3 border border-white/10 bg-black/20 rounded-xl px-3 py-2"
+                    >
+                      <a
+                        className="text-sm text-white hover:underline break-all"
+                        href={e.href}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {e.title}
+                      </a>
+                      <div className="text-sm text-white/70 shrink-0">
+                        {fmt(e.count)}
+                      </div>
+                    </div>
+                  ))}
+
+                  {(data?.topEvents ?? []).length === 0 && (
+                    <div className="text-white/60 text-sm">Aucune donnée.</div>
+                  )}
+                </div>
+              </div>
+            </div>
           </>
         )}
       </div>
