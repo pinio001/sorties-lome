@@ -92,7 +92,7 @@ export default function PlacesPage() {
       const l = (p.location ?? "").trim();
       if (l) set.add(l);
     }
-    return ["TOUS", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
+    return ["Lieux", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
   }, [places]);
 
   const matchesSearchAndLoc = (p: PlaceItem) => {
