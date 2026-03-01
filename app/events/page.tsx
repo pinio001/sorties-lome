@@ -1,12 +1,9 @@
-// app/events/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
+import { useRouter } from "next/navigation";
 import BingoBackground from "../components/BingoBackground";
-import { trackPageView } from "../../lib/trackViewClient";
-
-
 
 type EventItem = {
   id: string;
@@ -14,11 +11,8 @@ type EventItem = {
   location: string | null;
   image: string | null;
   whatsapp: string | null;
-  description: string | null;
-
-  // champs usuels chez toi (si certains n'existent pas, ça ne casse pas)
-  event_date?: string | null; // ex: "2026-01-26" ou ISO
-  event_time?: string | null; // ex: "20:30"
+  event_date?: string | null;
+  event_time?: string | null;
   is_featured?: boolean | null;
   featured_rank?: number | null;
   interest_count?: number | null;
@@ -41,35 +35,24 @@ function normalizePhoneToWa(phone: string) {
 function parseEventDate(e: EventItem): Date | null {
   const raw = (e.event_date ?? "").trim();
   if (!raw) return null;
-
-  // ISO datetime
   if (raw.includes("T")) {
     const d = new Date(raw);
     return isNaN(d.getTime()) ? null : d;
   }
-
-  // YYYY-MM-DD
   const d = new Date(`${raw}T00:00:00`);
   return isNaN(d.getTime()) ? null : d;
 }
 
 function formatDateFr(d: Date) {
-  return d.toLocaleDateString("fr-FR", {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-  });
+  return d.toLocaleDateString("fr-FR", { weekday: "short", day: "2-digit", month: "short" });
 }
 
 function formatTimeHM(t?: string | null) {
   const s = (t ?? "").trim();
   if (!s) return "";
-  // accepte "20:30" ou "20:30:00"
   const m = s.match(/^(\d{1,2}):(\d{2})/);
   if (!m) return s;
-  const hh = m[1].padStart(2, "0");
-  const mm = m[2];
-  return `${hh}:${mm}`;
+  return `${m[1].padStart(2, "0")}:${m[2]}`;
 }
 
 function startOfDay(d: Date) {
@@ -82,10 +65,6 @@ export default function EventsPage() {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TabKey>("all");
-
-  useEffect(() => {
-    trackPageView();
-  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -107,10 +86,9 @@ export default function EventsPage() {
     const tomorrow0 = new Date(today0);
     tomorrow0.setDate(tomorrow0.getDate() + 1);
 
-    // Weekend window: Sat 00:00 -> Mon 00:00
     const day = now.getDay(); // 0=Sun ... 6=Sat
     let satOffset = 6 - day;
-    if (day === 0) satOffset = -1; // dimanche -> samedi d'hier
+    if (day === 0) satOffset = -1;
     const weekendStart = new Date(today0);
     weekendStart.setDate(weekendStart.getDate() + satOffset);
     const weekendEnd = new Date(weekendStart);
@@ -121,8 +99,6 @@ export default function EventsPage() {
 
   const normalized = useMemo(() => {
     const { today0 } = ranges;
-
-    // On n'affiche pas le passé
     return events
       .map((e) => ({ e, d: parseEventDate(e) }))
       .filter(({ d }) => !d || d.getTime() >= today0.getTime());
@@ -140,15 +116,13 @@ export default function EventsPage() {
 
     const pick = (e: EventItem) => {
       const d = parseEventDate(e);
-      if (!d) return tab === "all"; // si pas de date, seulement dans "Tous"
+      if (!d) return tab === "all";
 
       const t = d.getTime();
-
       if (tab === "all") return t >= today0.getTime();
       if (tab === "tonight") return t >= today0.getTime() && t < tomorrow0.getTime();
       if (tab === "weekend") return t >= weekendStart.getTime() && t < weekendEnd.getTime();
       if (tab === "upcoming") return t >= tomorrow0.getTime();
-
       return true;
     };
 
@@ -160,7 +134,7 @@ export default function EventsPage() {
       <BingoBackground />
 
       <div className="max-w-md mx-auto px-4 pt-6 pb-10">
-        {/* ENTÊTE (même style que Places) */}
+        {/* ENTÊTE */}
         <div className="flex justify-between items-center mb-5">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-2xl bg-white text-black font-bold flex items-center justify-center shadow-lg">
@@ -172,22 +146,27 @@ export default function EventsPage() {
             </div>
           </div>
 
-          <a
-            href="/places"
-            className="text-sm border border-white/20 px-3 py-2 rounded-xl text-white hover:bg-white/10"
-          >
-            Places →
-          </a>
+          <div className="flex items-center gap-2">
+            <a
+              href="/contact?source=events"
+              className="text-sm border border-white/20 px-3 py-2 rounded-xl text-white hover:bg-white/10"
+              title="Contact"
+            >
+              ✉️ Contact
+            </a>
+            <a
+              href="/places"
+              className="text-sm border border-white/20 px-3 py-2 rounded-xl text-white hover:bg-white/10"
+            >
+              Places →
+            </a>
+          </div>
         </div>
 
         {/* HERO */}
         <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4 mb-4">
-          <h1 className="text-white font-semibold text-lg leading-6">
-            Qu'est-ce qu'on fait ce week-end?
-          </h1>
-          <p className="text-sm text-white/60 mt-1">
-            Découvrez les meilleures sorties à Lomé : concerts, soirées, vibes, évènements...
-          </p>
+          <h1 className="text-white font-semibold text-lg leading-6">Les events à Lomé</h1>
+          <p className="text-sm text-white/60 mt-1">Découvrez les meilleures sorties à lomé : concerts, soirées, évènements...</p>
         </div>
 
         {/* TABS */}
@@ -211,7 +190,6 @@ export default function EventsPage() {
           <p className="text-white/60 mt-6">Chargement…</p>
         ) : (
           <>
-            {/* EN AVANT (seulement dans "Tous") */}
             {tab === "all" && featured.length > 0 && (
               <>
                 <h2 className="text-white font-semibold mt-2 mb-3">🔥 En avant</h2>
@@ -244,14 +222,23 @@ export default function EventsPage() {
 }
 
 function EventCard({ event }: { event: EventItem }) {
+  const router = useRouter();
   const d = parseEventDate(event);
   const dateText = d ? formatDateFr(d) : "Date ?";
   const timeText = formatTimeHM(event.event_time);
 
+  const goDetails = () => router.push(`/event/${event.id}`);
+
   return (
     <div
+      role="button"
+      tabIndex={0}
+      onClick={goDetails}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") goDetails();
+      }}
       className={`
-        rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur
+        cursor-pointer rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur
         transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]
         ${event.is_featured ? "ring-1 ring-blue-500/30 shadow-[0_0_30px_rgba(59,130,246,0.25)]" : ""}
       `}
@@ -271,17 +258,14 @@ function EventCard({ event }: { event: EventItem }) {
 
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
-          <h2 className="font-semibold text-white">
-            {event.title ?? "Sans titre"}
-          </h2>
+          <h2 className="font-semibold text-white">{event.title ?? "Sans titre"}</h2>
 
           <div className="flex items-center gap-2">
             {(event.interest_count ?? 0) > 0 && (
               <span className="text-[11px] px-2 py-1 rounded-full bg-white/10 text-white border border-white/10">
-                ❤️ {event.interest_count}
+                ♥ {event.interest_count}
               </span>
             )}
-
             {event.is_featured && (
               <span className="text-[11px] px-2 py-1 rounded-full bg-white/10 text-white border border-white/10">
                 Premium
@@ -293,20 +277,22 @@ function EventCard({ event }: { event: EventItem }) {
         <p className="text-sm text-white/70 mt-1">
           {dateText} {timeText ? `• ${timeText}` : ""}
         </p>
-        <p className="text-sm text-white/60">
-          {event.location ?? "Lieu ?"}
-        </p>
+        <p className="text-sm text-white/60">{event.location ?? "Lieu ?"}</p>
 
         <div className="mt-4 flex gap-2">
-          <a
-            href={`/event/${event.id}`}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              goDetails();
+            }}
             className="flex-1 text-center bg-white text-black py-2 rounded-xl font-medium transition hover:scale-[1.03]"
           >
             Détails
-          </a>
+          </button>
 
           {event.whatsapp ? (
             <a
+              onClick={(e) => e.stopPropagation()}
               className="flex-1 text-center border border-white/20 text-white py-2 rounded-xl transition hover:bg-white/10 hover:scale-[1.03]"
               href={`https://wa.me/${normalizePhoneToWa(event.whatsapp)}?text=${encodeURIComponent(
                 `Bonsoir, je veux des infos pour: ${event.title ?? "cet événement"}`
@@ -318,6 +304,7 @@ function EventCard({ event }: { event: EventItem }) {
             </a>
           ) : (
             <button
+              onClick={(e) => e.stopPropagation()}
               className="flex-1 text-center border border-white/10 text-white/40 py-2 rounded-xl cursor-not-allowed"
               disabled
             >
