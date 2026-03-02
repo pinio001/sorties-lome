@@ -33,7 +33,7 @@ function useTyping(phrases: string[]) {
           setCi(0);
         } else setCi((c) => c - 1);
       }
-    }, del ? 45 : 80);
+    }, del ? 70 : 130);
     return () => clearTimeout(id);
   }, [ci, del, pi, phrases]);
 
@@ -113,7 +113,7 @@ function StatCard({ value, label, delay }: { value: number; label: string; delay
 
   return (
     <div className="flex-1 text-center rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm py-4 px-2">
-      <div className="text-2xl font-extrabold text-white tracking-tight" style={{ fontFamily: "'Syne', sans-serif" }}>
+      <div className="text-2xl font-extrabold text-white tracking-tight">
         {count}+
       </div>
       <div className="text-[10px] text-white/40 uppercase tracking-widest mt-1">{label}</div>
@@ -160,8 +160,6 @@ export default function HomePage() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
-
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(20px); }
           to   { opacity: 1; transform: translateY(0); }
@@ -189,7 +187,7 @@ export default function HomePage() {
 
       <main
         className="min-h-screen relative overflow-hidden"
-        style={{ background: "linear-gradient(160deg,#080c14 0%,#0d1628 50%,#080c14 100%)", fontFamily: "'DM Sans', sans-serif" }}
+        style={{ background: "linear-gradient(160deg,#080c14 0%,#0d1628 50%,#080c14 100%)" }}
       >
         {/* Ambient blobs */}
         <div style={{ position:"absolute", top:"-10%", left:"-5%", width:500, height:500, borderRadius:"50%",
@@ -205,10 +203,10 @@ export default function HomePage() {
           <div className="fu1 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center shadow-lg">
-                <span style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:18, color:"#000" }}>B</span>
+                <span style={{ fontWeight:800, fontSize:18, color:"#000" }}>B</span>
               </div>
               <div>
-                <div style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:16, color:"#fff" }}>Bingo</div>
+                <div style={{ fontWeight:700, fontSize:16, color:"#fff" }}>Bingo</div>
                 <div className="text-[10px] text-white/40 uppercase tracking-widest">Lomé</div>
               </div>
             </div>
@@ -240,7 +238,7 @@ export default function HomePage() {
 
           {/* ── HERO TITLE ── */}
           <div className="fu3 mt-4">
-            <h1 style={{ fontFamily:"'Syne',sans-serif", fontSize:36, fontWeight:800, lineHeight:1.1, letterSpacing:"-1.5px", color:"#fff" }}>
+            <h1 style={{ fontSize:26, fontWeight:700, lineHeight:1.2, letterSpacing:"-0.5px", color:"#fff" }}>
               {typed}<span className="cursor">|</span>
             </h1>
             <p className="mt-3 text-[15px] text-white/50 leading-relaxed max-w-xs">
@@ -289,7 +287,7 @@ export default function HomePage() {
             >
               <div>
                 <div className="text-2xl mb-1">🎵</div>
-                <div style={{ fontFamily:"'Syne',sans-serif", fontSize:17, fontWeight:700, color:"#fff" }}>
+                <div style={{ fontSize:16, fontWeight:700, color:"#fff" }}>
                   Sorties & Events
                 </div>
                 <div className="text-xs text-white/40 mt-1">Concerts · Clubs · Afterworks</div>
@@ -317,7 +315,7 @@ export default function HomePage() {
             >
               <div>
                 <div className="text-2xl mb-1">🏙️</div>
-                <div style={{ fontFamily:"'Syne',sans-serif", fontSize:17, fontWeight:700, color:"#fff" }}>
+                <div style={{ fontSize:16, fontWeight:700, color:"#fff" }}>
                   Bars, Restos & Plus
                 </div>
                 <div className="text-xs text-white/40 mt-1">Bar/Resto · Hôtels · Clubs · Loisirs</div>
