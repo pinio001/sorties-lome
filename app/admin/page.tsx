@@ -51,7 +51,7 @@ export default function AdminAddEventPage() {
       description: description.trim() || null,
       is_featured: isFeatured,
       featured_rank: featuredRank || 0,
-      image: primaryImage || null, // image = premier média (fallback côté API aussi)
+      image: primaryImage || null,
       media_urls,
     };
 
@@ -80,21 +80,48 @@ export default function AdminAddEventPage() {
   return (
     <main className="min-h-screen bg-black text-white">
       <div className="max-w-md mx-auto p-4 space-y-4">
-        <header className="flex items-center justify-between">
+
+        {/* ── HEADER ── */}
+        <header className="grid grid-cols-2 gap-2">
           <a
             href="/admin/manage"
-            className="text-sm px-3 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 transition"
+            className="text-sm px-3 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 transition text-center"
           >
             ← Gérer Events
           </a>
           <a
             href="/places"
-            className="text-sm px-3 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 transition"
+            className="text-sm px-3 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 transition text-center"
           >
             Voir Places →
           </a>
+          <a
+            href="/admin/import"
+            className="text-sm px-3 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 transition text-center"
+          >
+            📂 Import CSV
+          </a>
+          <a
+            href="/admin/moderation"
+            className="text-sm px-3 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 transition text-center"
+          >
+            🔍 Modération
+          </a>
+          <a
+            href="/admin/stats"
+            className="text-sm px-3 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 transition text-center"
+          >
+            📊 Stats
+          </a>
+          <a
+            href="/admin/feedback"
+            className="text-sm px-3 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 transition text-center"
+          >
+            💬 Feedback
+          </a>
         </header>
 
+        {/* ── FORMULAIRE ── */}
         <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
           <div className="font-semibold text-lg">Ajouter un Event</div>
 
@@ -145,7 +172,7 @@ export default function AdminAddEventPage() {
           <div className="rounded-2xl border border-white/10 bg-black/30 p-3 space-y-2">
             <div className="text-sm font-semibold">Médias (max 4)</div>
             <div className="text-xs text-white/60">
-              Mets ici des URLs (images/vidéos/YouTube/Drive/TikTok/Maps). Le carousel sera sur la page Détails.
+              Mets ici des URLs (images/vidéos). Le carousel sera sur la page Détails.
             </div>
 
             {media.map((m, i) => (
@@ -200,6 +227,7 @@ export default function AdminAddEventPage() {
             Ajouter
           </button>
         </div>
+
       </div>
     </main>
   );
