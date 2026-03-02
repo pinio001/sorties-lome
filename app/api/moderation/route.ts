@@ -70,19 +70,4 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ error: "Action invalide" }, { status: 400 });
 }
-```
 
----
-
-## Résumé des fichiers à créer
-```
-app/
-├── soumettre/page.tsx            ← formulaire public
-├── admin/
-│   ├── import/page.tsx           ← import CSV
-│   └── moderation/page.tsx       ← modération admin
-└── api/
-    ├── soumettre/route.ts        ← API publique
-    └── admin/
-        ├── import/route.ts       ← API import CSV
-        └── moderation/route.ts   ← API modération
