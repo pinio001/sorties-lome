@@ -188,7 +188,7 @@ export default function PlaceDetailPage() {
       return;
     }
 
-    router.push(`/places?cat=${encodeURIComponent(fallbackCat)}`);
+    router.back();
   };
 
   const shareText = useMemo(() => {

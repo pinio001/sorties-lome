@@ -213,16 +213,16 @@ export default function HomePage() {
 
             <div className="flex gap-2">
               <button
-                onClick={() => router.push("/events")}
-                className="text-sm border border-white/20 text-white/70 px-3 py-2 rounded-xl hover:bg-white/10 transition"
-              >
-                Events
-              </button>
-              <button
                 onClick={() => router.push("/places")}
                 className="text-sm border border-white/20 text-white/70 px-3 py-2 rounded-xl hover:bg-white/10 transition"
               >
                 Places
+              </button>
+              <button
+                onClick={() => router.push("/events")}
+                className="text-sm border border-white/20 text-white/70 px-3 py-2 rounded-xl hover:bg-white/10 transition"
+              >
+                Events
               </button>
             </div>
           </div>
@@ -249,17 +249,17 @@ export default function HomePage() {
           {/* ── CTA ── */}
           <div className="fu4 mt-6 flex gap-3">
             <button
-              onClick={() => router.push("/events")}
+              onClick={() => router.push("/places")}
               className="btn-primary flex-1 bg-white text-black font-semibold text-sm rounded-2xl py-3.5 transition"
             >
-              🎉 Voir les Events
+              📍 Explorer Places
             </button>
             <button
-              onClick={() => router.push("/places")}
+              onClick={() => router.push("/events")}
               className="btn-secondary flex-1 border border-white/20 text-white text-sm rounded-2xl py-3.5 transition"
               style={{ backdropFilter:"blur(10px)" }}
             >
-              📍 Explorer Places
+              🎉 Voir les Events
             </button>
           </div>
 

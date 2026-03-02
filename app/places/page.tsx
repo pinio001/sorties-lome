@@ -59,7 +59,18 @@ function norm(s: string) {
 export default function PlacesPage() {
   const [places, setPlaces] = useState<PlaceItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<TabKey>("bar_resto");
+  const [tab, setTab] = useState<TabKey>(() => {
+  if (typeof window === "undefined") return "bar_resto";
+  const t = new URLSearchParams(window.location.search).get("tab");
+  return (t as TabKey) ?? "bar_resto";
+});
+
+  const handleTabChange = (t: TabKey) => {
+  setTab(t);
+  const url = new URL(window.location.href);
+  url.searchParams.set("tab", t);
+  window.history.replaceState(null, "", url.toString());
+};
 
   const [q, setQ] = useState("");
   const [loc, setLoc] = useState("TOUS");
@@ -140,10 +151,18 @@ export default function PlacesPage() {
 
           <div className="flex items-center gap-2">
             <a
+              href="/"
+              className="text-sm border border-white/20 px-3 py-2 rounded-xl text-white/70 hover:bg-white/10 transition"
+              title="Accueil"
+            >
+              🏠
+            </a>
+            <a
               href="/contact?source=places"
               className="text-sm border border-white/20 px-3 py-2 rounded-xl text-white hover:bg-white/10"
               title="Contact"
             >
+	      	
               ✉️ Contact
             </a>
             <a
@@ -218,7 +237,7 @@ export default function PlacesPage() {
           {TABS.map((t) => (
             <button
               key={t.key}
-              onClick={() => setTab(t.key)}
+              onClick={() => handleTabChange(t.key)}
               className={`px-3 py-2 rounded-xl text-sm border transition ${
                 tab === t.key
                   ? "bg-white text-black"

@@ -64,7 +64,18 @@ function startOfDay(d: Date) {
 export default function EventsPage() {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<TabKey>("all");
+  const [tab, setTab] = useState<TabKey>(() => {
+  if (typeof window === "undefined") return "all";
+  const t = new URLSearchParams(window.location.search).get("tab");
+  return (t as TabKey) ?? "all";
+});
+
+  const handleTabChange = (t: TabKey) => {
+  setTab(t);
+  const url = new URL(window.location.href);
+  url.searchParams.set("tab", t);
+  window.history.replaceState(null, "", url.toString());
+};
 
   useEffect(() => {
     const load = async () => {
@@ -148,6 +159,14 @@ export default function EventsPage() {
 
           <div className="flex items-center gap-2">
             <a
+              href="/"
+              className="text-sm border border-white/20 px-3 py-2 rounded-xl text-white/70 hover:bg-white/10 transition"
+              title="Accueil"
+            >
+              🏠
+            </a>
+
+            <a
               href="/contact?source=events"
               className="text-sm border border-white/20 px-3 py-2 rounded-xl text-white hover:bg-white/10"
               title="Contact"
@@ -174,7 +193,7 @@ export default function EventsPage() {
           {TABS.map((t) => (
             <button
               key={t.key}
-              onClick={() => setTab(t.key)}
+              onClick={() => handleTabChange(t.key)}
               className={`px-3 py-2 rounded-xl text-sm border transition ${
                 tab === t.key
                   ? "bg-white text-black"

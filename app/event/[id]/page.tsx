@@ -217,7 +217,7 @@ export default function EventDetailPage() {
           Erreur: {errorMsg ?? "Événement introuvable"}
         </p>
         <button
-          onClick={() => router.push("/")}
+          onClick={() => router.back()}
           className="border border-white/20 text-white px-3 py-2 rounded-xl"
         >
           Retour
@@ -243,7 +243,7 @@ export default function EventDetailPage() {
           <MediaCarousel media={media} height="h-72" />
 
           <button
-            onClick={() => router.push("/")}
+            onClick={() => router.back()}
             className="absolute top-3 left-3 bg-black/60 border border-white/15 text-white px-3 py-2 rounded-xl backdrop-blur"
           >
             ← Retour
@@ -258,7 +258,7 @@ export default function EventDetailPage() {
       ) : (
         <div className="p-4">
           <button
-            onClick={() => router.push("/")}
+            onClick={() => router.back()}
             className="border border-white/20 text-white px-3 py-2 rounded-xl"
           >
             ← Retour
