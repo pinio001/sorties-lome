@@ -64,11 +64,12 @@ function startOfDay(d: Date) {
 export default function EventsPage() {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<TabKey>(() => {
-  if (typeof window === "undefined") return "all";
-  const t = new URLSearchParams(window.location.search).get("tab");
-  return (t as TabKey) ?? "all";
-});
+  const [tab, setTab] = useState<TabKey>("all");
+
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get("tab");
+    if (t) setTab(t as TabKey);
+  }, []);
 
   const handleTabChange = (t: TabKey) => {
   setTab(t);

@@ -59,11 +59,12 @@ function norm(s: string) {
 export default function PlacesPage() {
   const [places, setPlaces] = useState<PlaceItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<TabKey>(() => {
-  if (typeof window === "undefined") return "bar_resto";
-  const t = new URLSearchParams(window.location.search).get("tab");
-  return (t as TabKey) ?? "bar_resto";
-});
+  const [tab, setTab] = useState<TabKey>("bar_resto");
+
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get("tab");
+    if (t) setTab(t as TabKey);
+  }, []);
 
   const handleTabChange = (t: TabKey) => {
   setTab(t);
