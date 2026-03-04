@@ -90,11 +90,12 @@ export default function AdminAddEventPage() {
             ← Gérer Events
           </a>
           <a
-            href="/places"
+            href="/admin/places/manage"
             className="text-sm px-3 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 transition text-center"
           >
-            Voir Places →
+            ← Gérer Places
           </a>
+
           <a
             href="/admin/import"
             className="text-sm px-3 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 transition text-center"
