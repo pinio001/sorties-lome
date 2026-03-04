@@ -1,19 +1,19 @@
 export default function sitemap() {
   return [
     {
-      url: "https://sorties-lome.vercel.app",
+      url: "https://bingo228.com",
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 1,
     },
     {
-      url: "https://sorties-lome.vercel.app/events",
+      url: "https://bingo228.com/events",
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 0.9,
     },
     {
-      url: "https://sorties-lome.vercel.app/places",
+      url: "https://bingo228.com/places",
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.8,
