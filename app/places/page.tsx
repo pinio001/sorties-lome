@@ -5,6 +5,7 @@ import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import BingoBackground from "../components/BingoBackground";
 
+
 type PlaceCategory = "bar_resto" | "loisirs" | "club" | "hotel";
 
 type PlaceItem = {
