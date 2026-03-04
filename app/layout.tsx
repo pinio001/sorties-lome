@@ -10,8 +10,10 @@ const outfit = Outfit({
 
 export const metadata = {
   title: "Bingo — Tout ce qui se passe à Lomé",
-  description: "Events, bars, restos, clubs et hôtels à Lomé. La plateforme de référence pour les sorties à Lomé, Togo.",
-  keywords: "Lomé, sorties Lomé, events Togo, bars restaurants Lomé",
+  description: "...",
+  verification: {
+    google: "ONwy21cJztQyx3hVZpXnO94t4pAryV0Swtw-49nMk4o", // ← le code donné par Google
+  },
 };
 
 export default function RootLayout({
