@@ -14,12 +14,3 @@ export default function sitemap() {
     },
   ];
 }
-```
-
----
-
-### Étape 5 — Inspecter une URL
-
-Dans la barre en haut de Search Console, entre :
-```
-https://sorties-lome.vercel.app
