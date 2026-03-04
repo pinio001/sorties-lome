@@ -12,7 +12,7 @@ export const metadata = {
   title: "Bingo — Tout ce qui se passe à Lomé",
   description: "...",
   verification: {
-    google: "ONwy21cJztQyx3hVZpXnO94t4pAryV0Swtw-49nMk4o", // ← le code donné par Google
+    google: "Nvp3A1huoqR8VAqGFmP9N5HRNEvnQhlbnTyF1c0txSE", // ← le code donné par Google
   },
 };
 
