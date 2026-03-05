@@ -165,7 +165,7 @@ export default function EventsPage() {
           <div className="lg:flex lg:items-center lg:justify-between">
             <div>
               <h1 className="text-white font-semibold text-lg lg:text-2xl leading-6">
-                Les events à Lomé
+                Les meilleurs events à Lomé
               </h1>
               <p className="text-sm text-white/60 mt-1">
                 Découvrez les meilleures sorties à Lomé : concerts, soirées, évènements...
