@@ -9,7 +9,7 @@ const outfit = Outfit({
 });
 
 export const metadata = {
-  title: "Bingo — Tout ce qui se passe à Lomé",
+  title: "Bingo — Découvrez tous les meilleurs endroits de Lomé (Restaurants, Bar, Clubs, Hôtels...) et évènements du moment",
   description: "...",
   verification: {
     google: "Nvp3A1huoqR8VAqGFmP9N5HRNEvnQhlbnTyF1c0txSE", // ← le code donné par Google
