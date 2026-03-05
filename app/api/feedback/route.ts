@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
             </h2>
             <p style="color:#aaa;line-height:1.7;margin-bottom:20px;">
               Nous avons bien reçu votre message et nous vous en remercions.
-              Notre équipe vous répondra dans les plus brefs délais.
+              Si votre message requiert une réponse, notre équipe vous répondra dans les plus brefs délais.
             </p>
 
             <div style="background:#1a1a1a;border-radius:12px;padding:16px;margin-bottom:24px;">
