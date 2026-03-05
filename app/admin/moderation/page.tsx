@@ -10,13 +10,23 @@ export default function ModerationPage() {
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
-    setLoading(true);
-    const res = await fetch(`/api/admin/moderation?type=${tab}`, { credentials: "include" });
-    const data = await res.json();
-    setItems(data.items ?? []);
-    setLoading(false);
-  };
-
+   setLoading(true);
+   try {
+     const res = await fetch(`/api/admin/moderation?type=${tab}`, { credentials: "include" });
+     const data = await res.json().catch(() => ({}));
+     if (!res.ok) {
+       console.error("Erreur modération:", data.error);
+       setItems([]);
+     } else {
+       setItems(data.items ?? []);
+     }
+   } catch (e) {
+     console.error("Fetch échoué:", e);
+     setItems([]);
+   } finally {
+     setLoading(false);
+   }
+ };
   useEffect(() => { load(); }, [tab]);
 
   const action = async (id: string, act: "approve" | "reject") => {
