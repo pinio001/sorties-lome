@@ -14,12 +14,11 @@ export default function ModerationPage() {
    try {
      const res = await fetch(`/api/admin/moderation?type=${tab}`, { credentials: "include" });
      const data = await res.json().catch(() => ({}));
-     if (!res.ok) {
-       console.error("Erreur modération:", data.error);
-       setItems([]);
-     } else {
-       setItems(data.items ?? []);
-     }
+   if (!res.ok) {
+     setItems([]);
+   } else {
+     setItems(data.items ?? []);
+   }
    } catch (e) {
      console.error("Fetch échoué:", e);
      setItems([]);
