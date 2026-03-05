@@ -131,6 +131,12 @@ export default function PlacesPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+
+            <a href="/soumettre"
+              className="text-sm border border-white/20 px-3 py-2 rounded-xl text-white hover:bg-white/10">
+               + Soumettre
+            </a>
+
             <a href="/"
               className="text-sm border border-white/20 px-3 py-2 rounded-xl text-white/70 hover:bg-white/10 transition"
               title="Accueil">🏠</a>
