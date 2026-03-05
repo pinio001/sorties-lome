@@ -1,12 +1,9 @@
-// app/places/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
+import { useRouter } from "next/navigation";
 import BingoBackground from "../components/BingoBackground";
-import { trackPageView } from "../../lib/trackViewClient";
-
-
 
 
 type PlaceCategory = "bar_resto" | "loisirs" | "club" | "hotel";
@@ -65,13 +62,23 @@ export default function PlacesPage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TabKey>("bar_resto");
 
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get("tab");
+    if (t) setTab(t as TabKey);
+  }, []);
+
+  const handleTabChange = (t: TabKey) => {
+  setTab(t);
+  const url = new URL(window.location.href);
+  url.searchParams.set("tab", t);
+  window.history.replaceState(null, "", url.toString());
+};
+
   const [q, setQ] = useState("");
   const [loc, setLoc] = useState("TOUS");
   const [filtersOpen, setFiltersOpen] = useState(false);
-  
-  useEffect(() => {
-    trackPageView();
-  }, []);  
+
+  const router = useRouter();
 
   useEffect(() => {
     const load = async () => {
@@ -92,16 +99,13 @@ export default function PlacesPage() {
       const l = (p.location ?? "").trim();
       if (l) set.add(l);
     }
-    return ["Lieux", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
+    return ["LIEUX", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
   }, [places]);
 
   const matchesSearchAndLoc = (p: PlaceItem) => {
     const query = norm(q);
-    const locSel = loc;
-
     const okName = query ? norm(p.name).includes(query) : true;
-    const okLoc = locSel === "TOUS" ? true : norm(p.location ?? "") === norm(locSel);
-
+    const okLoc = loc === "TOUS" ? true : norm(p.location ?? "") === norm(loc);
     return okName && okLoc;
   };
 
@@ -146,15 +150,33 @@ export default function PlacesPage() {
               <div className="text-xs text-white/60">Places</div>
             </div>
           </div>
-          <a
-            href="/events"
-            className="text-sm border border-white/20 px-3 py-2 rounded-xl text-white hover:bg-white/10"
-          >
-            ← Events
-          </a>
+
+          <div className="flex items-center gap-2">
+            <a
+              href="/"
+              className="text-sm border border-white/20 px-3 py-2 rounded-xl text-white/70 hover:bg-white/10 transition"
+              title="Accueil"
+            >
+              🏠
+            </a>
+            <a
+              href="/contact?source=places"
+              className="text-sm border border-white/20 px-3 py-2 rounded-xl text-white hover:bg-white/10"
+              title="Contact"
+            >
+	      	
+              ✉️ Contact
+            </a>
+            <a
+              href="/events"
+              className="text-sm border border-white/20 px-3 py-2 rounded-xl text-white hover:bg-white/10"
+            >
+              Events →
+            </a>
+          </div>
         </div>
 
-        {/* HERO (compact) */}
+        {/* HERO + filtre compact */}
         <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4 mb-4">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -162,27 +184,26 @@ export default function PlacesPage() {
                 Où sortir à Lomé ?
               </h1>
               <p className="text-sm text-white/60 mt-1">
-                Meilleurs spots de Lomé ! Trouvez votre bonheur ! Recherchez par lieu au besoin              </p>
+                Meilleurs spots de Lomé ! Trouvez votre bonheur ! Filtrez par lieu au besoin.
+              </p>
             </div>
 
             <button
               onClick={() => setFiltersOpen((v) => !v)}
               className="shrink-0 text-sm border border-white/20 px-3 py-2 rounded-xl text-white hover:bg-white/10"
             >
-              Rechercher{activeCount ? ` (${activeCount})` : ""}
+              Filtrer{activeCount ? ` (${activeCount})` : ""}
             </button>
           </div>
 
-          {/* FILTERS (collapsible + compact) */}
           {filtersOpen && (
             <div className="mt-3 grid grid-cols-3 gap-2">
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Recherche une place"
+                placeholder="Recherche un spot…"
                 className="col-span-2 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/40"
               />
-
               <select
                 value={loc}
                 onChange={(e) => setLoc(e.target.value)}
@@ -196,10 +217,7 @@ export default function PlacesPage() {
               </select>
 
               <div className="col-span-3 flex items-center justify-between">
-                <div className="text-xs text-white/60">
-                  Résultats : {filtered.length}
-                </div>
-
+                <div className="text-xs text-white/60">Résultats : {filtered.length}</div>
                 {(q.trim() || loc !== "TOUS") && (
                   <button
                     onClick={() => {
@@ -221,7 +239,7 @@ export default function PlacesPage() {
           {TABS.map((t) => (
             <button
               key={t.key}
-              onClick={() => setTab(t.key)}
+              onClick={() => handleTabChange(t.key)}
               className={`px-3 py-2 rounded-xl text-sm border transition ${
                 tab === t.key
                   ? "bg-white text-black"
@@ -233,7 +251,6 @@ export default function PlacesPage() {
           ))}
         </div>
 
-        {/* CONTENT */}
         {loading ? (
           <p className="text-white/60 mt-6">Chargement…</p>
         ) : (
@@ -243,7 +260,7 @@ export default function PlacesPage() {
                 <h2 className="text-white font-semibold mt-6 mb-3">🔥 En avant</h2>
                 <div className="grid gap-4">
                   {featuredForTab.map((p) => (
-                    <PlaceCard key={p.id} place={p} />
+                    <PlaceCard key={p.id} place={p} activeTab={tab} />
                   ))}
                 </div>
               </>
@@ -254,7 +271,7 @@ export default function PlacesPage() {
             </h2>
             <div className="grid gap-4">
               {filtered.map((p) => (
-                <PlaceCard key={p.id} place={p} />
+                <PlaceCard key={p.id} place={p} activeTab={tab} />
               ))}
             </div>
 
@@ -268,7 +285,9 @@ export default function PlacesPage() {
   );
 }
 
-function PlaceCard({ place }: { place: PlaceItem }) {
+function PlaceCard({ place, activeTab }: { place: PlaceItem; activeTab: string }) {
+  const router = useRouter();
+
   const primary =
     place.image ??
     (Array.isArray(place.media_urls) && place.media_urls.length > 0
@@ -277,8 +296,20 @@ function PlaceCard({ place }: { place: PlaceItem }) {
 
   const isVideo = primary?.match(/\.(mp4|webm|ogg)$/i);
 
+  const goDetails = () => {
+    router.push(`/place/${place.id}?cat=${encodeURIComponent(activeTab)}`);
+  };
+
   return (
-    <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={goDetails}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") goDetails();
+      }}
+      className="cursor-pointer rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+    >
       <div className="relative w-full h-44 overflow-hidden">
         {primary ? (
           isVideo ? (
@@ -318,15 +349,19 @@ function PlaceCard({ place }: { place: PlaceItem }) {
         <p className="text-sm text-white/60 mt-1">{place.location ?? "Lieu ?"}</p>
 
         <div className="mt-4 flex gap-2">
-          <a
-            href={`/place/${place.id}`}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              goDetails();
+            }}
             className="flex-1 text-center bg-white text-black py-2 rounded-xl font-medium"
           >
             Détails
-          </a>
+          </button>
 
           {place.whatsapp ? (
             <a
+              onClick={(e) => e.stopPropagation()}
               className="flex-1 text-center border border-white/20 text-white py-2 rounded-xl hover:bg-white/10"
               href={`https://wa.me/${normalizePhoneToWa(place.whatsapp)}?text=${encodeURIComponent(
                 `Bonsoir, je veux des infos sur ${place.name}`
@@ -338,6 +373,7 @@ function PlaceCard({ place }: { place: PlaceItem }) {
             </a>
           ) : (
             <button
+              onClick={(e) => e.stopPropagation()}
               className="flex-1 text-center border border-white/10 text-white/40 py-2 rounded-xl cursor-not-allowed"
               disabled
             >
