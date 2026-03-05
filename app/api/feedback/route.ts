@@ -7,7 +7,11 @@ export async function POST(req: NextRequest) {
 		
   const resend = new Resend(process.env.RESEND_API_KEY);
   const ADMIN_EMAIL = "luxe004.0@gmail.com";
-  const FROM_EMAIL  = "Bingo228 <noreply@bingo228.com>";
+  // ❌ Temporaire
+  #const FROM_EMAIL = "Bingo228 <onboarding@resend.dev>";
+
+// ✅ Officiel
+  const FROM_EMAIL = "Bingo228 <noreply@bingo228.com>";
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Body invalide" }, { status: 400 });
 
