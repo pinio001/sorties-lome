@@ -204,10 +204,16 @@ export default function PlacesPage() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <a href="/" className="text-sm border border-white/15 px-3 py-2 rounded-xl text-white/60 hover:bg-white/8 transition">🏠</a>
-              <a href="/contact?source=places" className="text-sm border border-white/15 px-3 py-2 rounded-xl text-white/70 hover:bg-white/8 transition">✉️ Contact</a>
-              <a href="/events" className="text-sm border border-white/15 px-3 py-2 rounded-xl text-white/70 hover:bg-white/8 transition">Events →</a>
+            <div className="flex items-center gap-1.5">
+              <a href="/" className="border border-white/15 px-2.5 py-2 rounded-xl text-white/60 hover:bg-white/8 transition text-sm">🏠</a>
+              <a href="/contact?source=places" className="border border-white/15 px-2.5 py-2 rounded-xl text-white/70 hover:bg-white/8 transition text-sm">
+                <span className="hidden sm:inline text-sm">✉️ Contact</span>
+                <span className="sm:hidden text-sm">✉️</span>
+              </a>
+              <a href="/events" className="border border-white/15 px-2.5 py-2 rounded-xl text-white/70 hover:bg-white/8 transition text-sm">
+                <span className="hidden sm:inline">Events →</span>
+                <span className="sm:hidden">🎉</span>
+              </a>
             </div>
           </div>
 

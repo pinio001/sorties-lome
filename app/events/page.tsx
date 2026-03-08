@@ -195,10 +195,16 @@ export default function EventsPage() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <a href="/" className="text-sm border border-white/15 px-3 py-2 rounded-xl text-white/60 hover:bg-white/8 transition">🏠</a>
-              <a href="/contact?source=events" className="text-sm border border-white/15 px-3 py-2 rounded-xl text-white/70 hover:bg-white/8 transition">✉️ Contact</a>
-              <a href="/places" className="text-sm border border-white/15 px-3 py-2 rounded-xl text-white/70 hover:bg-white/8 transition">Places →</a>
+            <div className="flex items-center gap-1.5">
+              <a href="/" className="border border-white/15 px-2.5 py-2 rounded-xl text-white/60 hover:bg-white/8 transition text-sm">🏠</a>
+              <a href="/contact?source=events" className="border border-white/15 px-2.5 py-2 rounded-xl text-white/70 hover:bg-white/8 transition text-sm">
+                <span className="hidden sm:inline">✉️ Contact</span>
+                <span className="sm:hidden">✉️</span>
+              </a>
+              <a href="/places" className="border border-white/15 px-2.5 py-2 rounded-xl text-white/70 hover:bg-white/8 transition text-sm">
+                <span className="hidden sm:inline">Places →</span>
+                <span className="sm:hidden">📍</span>
+              </a>
             </div>
           </div>
 
