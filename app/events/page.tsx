@@ -16,15 +16,16 @@ type EventItem = {
   is_featured?: boolean | null;
   featured_rank?: number | null;
   interest_count?: number | null;
+  description?: string | null;
 };
 
 type TabKey = "all" | "tonight" | "weekend" | "upcoming";
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: "all",      label: "Tous" },
-  { key: "tonight",  label: "Ce soir" },
-  { key: "weekend",  label: "Ce week-end" },
-  { key: "upcoming", label: "À venir" },
+const TABS: { key: TabKey; label: string; emoji: string }[] = [
+  { key: "all",      label: "Tous",        emoji: "✦" },
+  { key: "tonight",  label: "Ce soir",     emoji: "🌙" },
+  { key: "weekend",  label: "Ce week-end", emoji: "🔥" },
+  { key: "upcoming", label: "À venir",     emoji: "📅" },
 ];
 
 function normalizePhoneToWa(phone: string) {
@@ -74,16 +75,8 @@ export default function EventsPage() {
   };
 
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      const { data } = await supabase
-        .from("events")
-        .select("*")
-        .order("created_at", { ascending: false });
-      setEvents((data ?? []) as EventItem[]);
-      setLoading(false);
-    };
-    load();
+    supabase.from("events").select("*").order("created_at", { ascending: false })
+      .then(({ data }) => { setEvents((data ?? []) as EventItem[]); setLoading(false); });
   }, []);
 
   const ranges = useMemo(() => {
@@ -129,190 +122,304 @@ export default function EventsPage() {
   }, [normalized, ranges, tab]);
 
   return (
-    <main className="min-h-screen">
-      <BingoBackground />
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+        .ev-root { font-family: 'DM Sans', sans-serif; }
+        .ev-root h1, .ev-root .syne { font-family: 'Syne', sans-serif; }
 
-      <div className="max-w-6xl mx-auto px-4 lg:px-10 pt-6 pb-10">
+        @keyframes fadeSlideUp {
+          from { opacity:0; transform:translateY(16px); }
+          to   { opacity:1; transform:translateY(0); }
+        }
+        @keyframes shimmer {
+          0%   { background-position:-200% center; }
+          100% { background-position:200% center; }
+        }
+        @keyframes pulse-dot {
+          0%,100% { transform:scale(1); opacity:1; }
+          50%      { transform:scale(1.5); opacity:.5; }
+        }
+        .anim-1 { animation:fadeSlideUp .5s ease both .05s; }
+        .anim-2 { animation:fadeSlideUp .5s ease both .12s; }
+        .anim-3 { animation:fadeSlideUp .5s ease both .20s; }
+        .anim-4 { animation:fadeSlideUp .5s ease both .28s; }
 
-        {/* ── HEADER ── */}
-        <div className="flex justify-between items-center mb-5">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-2xl bg-white text-black font-bold flex items-center justify-center shadow-lg">
-              <span className="font-black text-xl tracking-tight">B</span>
-            </div>
-            <div>
-              <div className="text-white font-semibold">Bingo</div>
-              <div className="text-xs text-white/60">Events</div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
+        .grain {
+          pointer-events:none; position:fixed; inset:0; z-index:1;
+          background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+          opacity:.4;
+        }
+        .ev-card { transition:transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s ease; }
+        .ev-card:hover { transform:translateY(-6px) scale(1.01); }
+        .ev-card .card-img { transition:transform .5s ease; }
+        .ev-card:hover .card-img { transform:scale(1.06); }
 
-            
-            <a href="/"
-              className="text-sm border border-white/20 px-3 py-2 rounded-xl text-white/70 hover:bg-white/10 transition"
-              title="Accueil">🏠</a>
-            <a href="/contact?source=events"
-              className="text-sm border border-white/20 px-3 py-2 rounded-xl text-white hover:bg-white/10">
-              ✉️ Contact
-            </a>
-            <a href="/places"
-              className="text-sm border border-white/20 px-3 py-2 rounded-xl text-white hover:bg-white/10">
-              Places →
-            </a>
-          </div>
-        </div>
+        .hero-ev { transition:transform .3s ease, box-shadow .3s ease; }
+        .hero-ev:hover { transform:translateY(-4px); }
+        .hero-ev .card-img { transition:transform .6s ease; }
+        .hero-ev:hover .card-img { transform:scale(1.04); }
 
-        {/* ── HERO ── */}
-        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4 lg:p-6 mb-5">
-          <div className="lg:flex lg:items-center lg:justify-between">
-            <div>
-              <h1 className="text-white font-semibold text-lg lg:text-2xl leading-6">
-                Les meilleurs events à Lomé
-              </h1>
-              <p className="text-sm text-white/60 mt-1">
-                Découvrez les meilleures sorties à Lomé : concerts, soirées, évènements...
-              </p>
-            </div>
-            {/* Stats desktop */}
-            <div className="hidden lg:flex items-center gap-6 mt-0">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white">{events.length}</div>
-                <div className="text-xs text-white/40 uppercase tracking-widest">Events</div>
+        .tab-pill { transition:all .25s cubic-bezier(.34,1.56,.64,1); }
+        .tab-pill:hover { transform:translateY(-2px); }
+
+        .feat-badge {
+          background:linear-gradient(90deg,#fff,#c8deff,#fff);
+          background-size:200% auto;
+          animation:shimmer 2.5s linear infinite;
+        }
+        .live-dot { animation:pulse-dot 2s ease infinite; }
+      `}</style>
+
+      <div className="grain" />
+
+      <main className="ev-root min-h-screen relative"
+        style={{ background:"linear-gradient(160deg,#060a12 0%,#0c1220 60%,#060a12 100%)" }}>
+        <BingoBackground />
+
+        <div className="relative z-10 max-w-6xl mx-auto px-4 lg:px-10 pt-6 pb-16">
+
+          {/* NAVBAR */}
+          <div className="anim-1 flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center shadow-lg">
+                <span style={{ fontWeight:900, fontSize:18, color:"#000", fontFamily:"Syne" }}>B</span>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white">{featured.length}</div>
-                <div className="text-xs text-white/40 uppercase tracking-widest">En avant</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── TABS ── */}
-        <div className="flex gap-2 flex-wrap mb-5">
-          {TABS.map((t) => (
-            <button key={t.key} onClick={() => handleTabChange(t.key)}
-              className={`px-4 py-2 rounded-xl text-sm border transition ${
-                tab === t.key
-                  ? "bg-white text-black font-medium"
-                  : "border-white/20 text-white hover:bg-white/10"
-              }`}>
-              {t.label}
-            </button>
-          ))}
-          <a href="/soumettre"
-            className="text-sm border border-white/20 px-3 py-2 rounded-xl text-white hover:bg-white/10">
-            + Soumettre
-          </a>
-        </div>
-
-        {loading ? (
-          <p className="text-white/60 mt-6">Chargement…</p>
-        ) : (
-          <>
-            {/* ── FEATURED ── */}
-            {tab === "all" && featured.length > 0 && (
-              <>
-                <h2 className="text-white font-semibold mt-2 mb-3">🔥 En avant</h2>
-                {/* Desktop : jusqu'à 3 par ligne | Mobile : 1 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                  {featured.map((ev) => <EventCard key={ev.id} event={ev} />)}
+              <div>
+                <div style={{ fontFamily:"Syne", fontWeight:700, fontSize:15, color:"#fff" }}>Bingo</div>
+                <div className="flex items-center gap-1.5">
+                  <span className="live-dot w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
+                  <span style={{ fontSize:10, color:"#4ade80", letterSpacing:"0.1em", textTransform:"uppercase", fontWeight:600 }}>
+                    {events.length} events
+                  </span>
                 </div>
-              </>
-            )}
-
-            {/* ── ALL EVENTS ── */}
-            <h2 className="text-white font-semibold mb-3">
-              {tab === "all" ? "Tous les events" : "Résultats"}
-              <span className="ml-2 text-white/30 font-normal text-sm">({filtered.length})</span>
-            </h2>
-
-            {/* Desktop : 2-3 colonnes | Mobile : 1 colonne */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filtered.map((ev) => <EventCard key={ev.id} event={ev} />)}
-            </div>
-
-            {filtered.length === 0 && (
-              <div className="text-center py-16 text-white/40">
-                <div className="text-4xl mb-3">🎉</div>
-                <p>Aucun événement trouvé pour cette période.</p>
               </div>
-            )}
-          </>
-        )}
-      </div>
-    </main>
+            </div>
+            <div className="flex items-center gap-2">
+              <a href="/" className="text-sm border border-white/15 px-3 py-2 rounded-xl text-white/60 hover:bg-white/8 transition">🏠</a>
+              <a href="/contact?source=events" className="text-sm border border-white/15 px-3 py-2 rounded-xl text-white/70 hover:bg-white/8 transition">✉️ Contact</a>
+              <a href="/places" className="text-sm border border-white/15 px-3 py-2 rounded-xl text-white/70 hover:bg-white/8 transition">Places →</a>
+            </div>
+          </div>
+
+          {/* HERO HEADER */}
+          <div className="anim-2 mb-8">
+            <div className="flex items-center gap-2 mb-2">
+              <span style={{ fontSize:28 }}>🎉</span>
+              <span style={{ fontSize:11, fontWeight:600, letterSpacing:"0.15em", textTransform:"uppercase", color:"#fff", fontFamily:"DM Sans" }}>
+                Events
+              </span>
+            </div>
+            <h1 style={{ fontFamily:"Syne", fontWeight:800, fontSize:"clamp(28px,4vw,52px)", lineHeight:1.1, color:"#fff", letterSpacing:"-1px" }}>
+              Les meilleures<br/>
+              <span style={{ color:"rgba(255,255,255,.7)" }}>soirées à Lomé</span>
+            </h1>
+            <p style={{ color:"rgba(255,255,255,.45)", fontSize:14, marginTop:8 }}>
+              {filtered.length} événements · Concerts, clubs, afterworks & plus
+            </p>
+          </div>
+
+          {/* TABS */}
+          <div className="anim-3 flex gap-2 flex-wrap mb-8">
+            {TABS.map((t) => (
+              <button key={t.key} onClick={() => handleTabChange(t.key)}
+                className="tab-pill flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-medium"
+                style={{
+                  background: tab === t.key ? "#fff" : "rgba(255,255,255,.06)",
+                  color: tab === t.key ? "#000" : "rgba(255,255,255,.65)",
+                  border: `1px solid ${tab === t.key ? "#fff" : "rgba(255,255,255,.1)"}`,
+                  boxShadow: tab === t.key ? "0 0 20px rgba(255,255,255,.15)" : "none",
+                  fontFamily:"DM Sans", fontWeight: tab === t.key ? 600 : 400,
+                }}>
+                <span>{t.emoji}</span>
+                <span>{t.label}</span>
+              </button>
+            ))}
+            <a href="/soumettre"
+              className="tab-pill flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm"
+              style={{ border:"1px dashed rgba(255,255,255,.2)", color:"rgba(255,255,255,.45)" }}>
+              + Soumettre
+            </a>
+          </div>
+
+          {loading ? (
+            <div className="flex items-center justify-center py-24 gap-3">
+              <div className="w-2 h-2 rounded-full bg-white/40 animate-bounce" style={{ animationDelay:"0ms" }} />
+              <div className="w-2 h-2 rounded-full bg-white/40 animate-bounce" style={{ animationDelay:"150ms" }} />
+              <div className="w-2 h-2 rounded-full bg-white/40 animate-bounce" style={{ animationDelay:"300ms" }} />
+            </div>
+          ) : (
+            <div className="anim-4">
+
+              {/* FEATURED */}
+              {tab === "all" && featured.length > 0 && (
+                <div className="mb-10">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="feat-badge text-black text-[10px] font-bold px-2.5 py-1 rounded-full tracking-widest uppercase">
+                      ⚡ En avant
+                    </span>
+                    <div className="h-px flex-1" style={{ background:"linear-gradient(to right,rgba(255,255,255,.2),transparent)" }} />
+                  </div>
+
+                  {featured.length === 1 ? (
+                    <HeroEventCard event={featured[0]} />
+                  ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      <HeroEventCard event={featured[0]} />
+                      <div className="grid gap-4">
+                        {featured.slice(1, 3).map((ev) => <EventCard key={ev.id} event={ev} compact />)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* SECTION TITLE */}
+              <div className="flex items-center gap-3 mb-5">
+                <span style={{ fontFamily:"Syne", fontWeight:700, fontSize:16, color:"#fff" }}>
+                  {tab === "all" ? "Tous les events" : "Résultats"}
+                </span>
+                <span style={{ fontSize:12, color:"rgba(255,255,255,.3)" }}>({filtered.length})</span>
+                <div className="h-px flex-1" style={{ background:"linear-gradient(to right,rgba(255,255,255,.15),transparent)" }} />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filtered.map((ev) => <EventCard key={ev.id} event={ev} />)}
+              </div>
+
+              {filtered.length === 0 && (
+                <div className="text-center py-20">
+                  <div className="text-5xl mb-4">🌙</div>
+                  <p style={{ color:"rgba(255,255,255,.35)", fontFamily:"DM Sans" }}>
+                    Aucun événement pour cette période.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </main>
+    </>
   );
 }
 
-// ─── Event Card ───────────────────────────────────────────────────────────────
-function EventCard({ event }: { event: EventItem }) {
+function HeroEventCard({ event }: { event: EventItem }) {
+  const router = useRouter();
+  const d = parseEventDate(event);
+  const dateText = d ? formatDateFr(d) : null;
+  const timeText = formatTimeHM(event.event_time);
+
+  return (
+    <div className="hero-ev cursor-pointer rounded-3xl overflow-hidden relative"
+      style={{ height:380, border:"1px solid rgba(255,255,255,.1)", boxShadow:"0 20px 60px rgba(0,0,0,.5)" }}
+      onClick={() => router.push(`/event/${event.id}`)}>
+      {event.image ? (
+        <img src={event.image} alt={event.title ?? ""} className="card-img absolute inset-0 w-full h-full object-cover" />
+      ) : (
+        <div className="absolute inset-0" style={{ background:"linear-gradient(135deg,#0d1628,#1a2744)" }} />
+      )}
+      <div className="absolute inset-0" style={{ background:"linear-gradient(to top,rgba(0,0,0,.92) 0%,rgba(0,0,0,.3) 50%,transparent 100%)" }} />
+
+      <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+        <span style={{ background:"#fff", color:"#000", fontSize:10, fontWeight:700, padding:"3px 10px", borderRadius:99, letterSpacing:"0.1em", textTransform:"uppercase" }}>
+          Premium
+        </span>
+        {(event.interest_count ?? 0) > 0 && (
+          <span style={{ background:"rgba(0,0,0,.6)", backdropFilter:"blur(10px)", color:"#fff", fontSize:12, padding:"4px 10px", borderRadius:99, border:"1px solid rgba(255,255,255,.15)" }}>
+            ❤️ {event.interest_count}
+          </span>
+        )}
+      </div>
+
+      <div className="absolute bottom-0 left-0 right-0 p-5">
+        {(dateText || timeText) && (
+          <div style={{ fontSize:11, color:"rgba(255,255,255,.6)", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:4 }}>
+            {dateText}{timeText ? ` · ${timeText}` : ""}
+          </div>
+        )}
+        <div style={{ fontFamily:"Syne", fontWeight:800, fontSize:22, color:"#fff", lineHeight:1.2, marginBottom:6 }}>
+          {event.title}
+        </div>
+        {event.location && (
+          <div style={{ fontSize:12, color:"rgba(255,255,255,.55)", marginBottom:14 }}>📍 {event.location}</div>
+        )}
+        <div className="flex gap-2">
+          <button onClick={(e) => { e.stopPropagation(); router.push(`/event/${event.id}`); }}
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
+            style={{ background:"#fff", color:"#000", fontFamily:"DM Sans" }}>
+            Voir l'event
+          </button>
+          {event.whatsapp && (
+            <a onClick={(e) => e.stopPropagation()}
+              href={`https://wa.me/${normalizePhoneToWa(event.whatsapp)}?text=${encodeURIComponent(`Bonsoir, infos pour: ${event.title}`)}`}
+              target="_blank" rel="noreferrer"
+              className="px-4 py-2.5 rounded-xl text-sm text-white"
+              style={{ border:"1px solid rgba(255,255,255,.25)", backdropFilter:"blur(10px)", background:"rgba(255,255,255,.1)" }}>
+              WhatsApp
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EventCard({ event, compact }: { event: EventItem; compact?: boolean }) {
   const router = useRouter();
   const d = parseEventDate(event);
   const dateText = d ? formatDateFr(d) : "Date ?";
   const timeText = formatTimeHM(event.event_time);
-  const goDetails = () => router.push(`/event/${event.id}`);
 
   return (
-    <div
-      role="button" tabIndex={0}
-      onClick={goDetails}
-      onKeyDown={(e) => { if (e.key === "Enter") goDetails(); }}
-      className={`
-        cursor-pointer rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur
-        transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]
-        ${event.is_featured ? "ring-1 ring-blue-500/30 shadow-[0_0_30px_rgba(59,130,246,0.25)]" : ""}
-      `}
-    >
-      {event.image ? (
-        <img src={event.image} alt={event.title ?? "Événement"}
-          className="w-full h-44 object-cover transition-transform duration-500 hover:scale-[1.03]"
-          loading="lazy" />
-      ) : (
-        <div className="w-full h-44 flex items-center justify-center bg-white/5">
-          <span className="text-sm text-white/50">Pas d'image</span>
-        </div>
-      )}
+    <div className="ev-card cursor-pointer rounded-2xl overflow-hidden"
+      style={{ border:"1px solid rgba(255,255,255,.08)", background:"rgba(255,255,255,.04)", boxShadow:"0 4px 24px rgba(0,0,0,.3)" }}
+      onClick={() => router.push(`/event/${event.id}`)}>
+
+      <div className="relative overflow-hidden" style={{ height: compact ? 130 : 200 }}>
+        {event.image ? (
+          <img src={event.image} alt={event.title ?? ""} className="card-img w-full h-full object-cover" loading="lazy" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center"
+            style={{ background:"linear-gradient(135deg,rgba(255,255,255,.05),rgba(0,0,0,.3))" }}>
+            <span style={{ fontSize:32, opacity:.3 }}>🎉</span>
+          </div>
+        )}
+        <div className="absolute inset-0" style={{ background:"linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 60%)" }} />
+
+        {(event.interest_count ?? 0) > 0 && (
+          <div className="absolute bottom-3 right-3"
+            style={{ background:"rgba(0,0,0,.65)", backdropFilter:"blur(8px)", color:"#fff", fontSize:11, padding:"3px 8px", borderRadius:99, border:"1px solid rgba(255,255,255,.12)" }}>
+            ❤️ {event.interest_count}
+          </div>
+        )}
+      </div>
 
       <div className="p-4">
-        <div className="flex items-start justify-between gap-2">
-          <h2 className="font-semibold text-white leading-tight">{event.title ?? "Sans titre"}</h2>
-          <div className="flex items-center gap-1 shrink-0">
-            {(event.interest_count ?? 0) > 0 && (
-              <span className="text-[11px] px-2 py-1 rounded-full bg-white/10 text-white border border-white/10">
-                ♥ {event.interest_count}
-              </span>
-            )}
-            {event.is_featured && (
-              <span className="text-[11px] px-2 py-1 rounded-full bg-white/10 text-white border border-white/10">
-                Premium
-              </span>
-            )}
-          </div>
+        <div style={{ fontSize:11, color:"rgba(255,255,255,.45)", letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:3 }}>
+          {dateText}{timeText ? ` · ${timeText}` : ""}
         </div>
-
-        <p className="text-sm text-white/70 mt-1">
-          {dateText}{timeText ? ` • ${timeText}` : ""}
-        </p>
-        <p className="text-sm text-white/60">{event.location ?? "Lieu ?"}</p>
-
-        <div className="mt-4 flex gap-2">
-          <button onClick={(e) => { e.stopPropagation(); goDetails(); }}
-            className="flex-1 text-center bg-white text-black py-2 rounded-xl font-medium transition hover:scale-[1.03]">
+        <div style={{ fontFamily:"Syne", fontWeight:700, fontSize:15, color:"#fff", lineHeight:1.3, marginBottom:4 }}
+          className="line-clamp-1">{event.title ?? "Sans titre"}</div>
+        {event.location && !compact && (
+          <div style={{ fontSize:12, color:"rgba(255,255,255,.4)", marginBottom:12 }}>📍 {event.location}</div>
+        )}
+        <div className="flex gap-2 mt-3">
+          <button onClick={(e) => { e.stopPropagation(); router.push(`/event/${event.id}`); }}
+            className="flex-1 py-2 rounded-xl text-xs font-semibold"
+            style={{ background:"#fff", color:"#000", fontFamily:"DM Sans" }}>
             Détails
           </button>
           {event.whatsapp ? (
             <a onClick={(e) => e.stopPropagation()}
-              className="flex-1 text-center border border-white/20 text-white py-2 rounded-xl transition hover:bg-white/10 hover:scale-[1.03]"
-              href={`https://wa.me/${normalizePhoneToWa(event.whatsapp)}?text=${encodeURIComponent(
-                `Bonsoir, je veux des infos pour: ${event.title ?? "cet événement"}`
-              )}`}
-              target="_blank" rel="noreferrer">
+              href={`https://wa.me/${normalizePhoneToWa(event.whatsapp)}?text=${encodeURIComponent(`Bonsoir, infos pour: ${event.title}`)}`}
+              target="_blank" rel="noreferrer"
+              className="flex-1 py-2 rounded-xl text-xs text-white text-center transition hover:bg-white/10"
+              style={{ border:"1px solid rgba(255,255,255,.2)" }}>
               WhatsApp
             </a>
           ) : (
-            <button onClick={(e) => e.stopPropagation()}
-              className="flex-1 text-center border border-white/10 text-white/40 py-2 rounded-xl cursor-not-allowed"
-              disabled>
+            <button disabled className="flex-1 py-2 rounded-xl text-xs text-center cursor-not-allowed"
+              style={{ border:"1px solid rgba(255,255,255,.08)", color:"rgba(255,255,255,.25)" }}>
               WhatsApp
             </button>
           )}
