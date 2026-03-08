@@ -362,7 +362,7 @@ export default function PlacesPage() {
 // ─── Hero Card (featured large) ───────────────────────────────────────────────
 function HeroCard({ place, activeTab, accentColor }: { place: PlaceItem; activeTab: string; accentColor: string }) {
   const router = useRouter();
-  const primary = place.image ?? (Array.isArray(place.media_urls) && place.media_urls[0]) ?? null;
+  const primary: string | null = place.image || (Array.isArray(place.media_urls) && place.media_urls[0]) || null;
   const goDetails = () => router.push(`/place/${place.id}?cat=${encodeURIComponent(activeTab)}`);
 
   return (
@@ -428,7 +428,7 @@ function HeroCard({ place, activeTab, accentColor }: { place: PlaceItem; activeT
 function PlaceCard({ place, activeTab, accentColor, compact, rank }:
   { place: PlaceItem; activeTab: string; accentColor: string; compact?: boolean; rank?: number }) {
   const router = useRouter();
-  const primary = place.image ?? (Array.isArray(place.media_urls) && place.media_urls[0]) ?? null;
+  const primary: string | null = place.image || (Array.isArray(place.media_urls) && place.media_urls[0]) || null;
   const isVideo = primary?.match(/\.(mp4|webm|ogg)$/i);
   const goDetails = () => router.push(`/place/${place.id}?cat=${encodeURIComponent(activeTab)}`);
 
