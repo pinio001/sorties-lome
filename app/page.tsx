@@ -227,8 +227,8 @@ export default function HomePage() {
               <div onClick={() => router.push("/events")}
                 className="card-cat cursor-pointer rounded-2xl p-5 lg:p-7 mb-4 flex items-center justify-between"
                 style={{
-                  border:"1px solid rgba(255,255,255,.12)",
-                  background:"linear-gradient(135deg,rgba(255,255,255,.07) 0%,rgba(255,255,255,.02) 100%)",
+                  border:"1px solid rgba(59,130,246,.2)",
+                  background:"linear-gradient(135deg,rgba(59,130,246,.12) 0%,rgba(59,130,246,.03) 100%)",
                   backdropFilter:"blur(20px)",
                 }}>
                 <div>
@@ -252,8 +252,8 @@ export default function HomePage() {
               <div onClick={() => router.push("/places")}
                 className="card-cat cursor-pointer rounded-2xl p-5 lg:p-7 flex items-center justify-between"
                 style={{
-                  border:"1px solid rgba(255,255,255,.12)",
-                  background:"linear-gradient(135deg,rgba(255,255,255,.05) 0%,rgba(255,255,255,.01) 100%)",
+                  border:"1px solid rgba(251,191,36,.2)",
+                  background:"linear-gradient(135deg,rgba(251,191,36,.08) 0%,rgba(251,191,36,.02) 100%)",
                   backdropFilter:"blur(20px)",
                 }}>
                 <div>
