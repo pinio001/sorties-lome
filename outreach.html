@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bingo228 — Outreach WhatsApp</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, sans-serif; background: #0a0f1e; color: #fff; padding: 24px; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .sub { color: rgba(255,255,255,.4); font-size: 13px; margin-bottom: 24px; }
+  .stats { display: flex; gap: 12px; margin-bottom: 24px; }
+  .stat { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 12px 20px; text-align: center; }
+  .stat strong { display: block; font-size: 22px; }
+  .stat span { font-size: 11px; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: .1em; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 12px; color: rgba(255,255,255,.4); font-size: 10px; text-transform: uppercase; letter-spacing: .1em; border-bottom: 1px solid rgba(255,255,255,.08); }
+  td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,.05); vertical-align: middle; }
+  tr:hover td { background: rgba(255,255,255,.03); }
+  .cat { font-size: 11px; background: rgba(255,255,255,.08); border-radius: 6px; padding: 2px 8px; }
+  .wa-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #25D366; color: #000; text-decoration: none;
+    padding: 7px 14px; border-radius: 10px; font-size: 12px; font-weight: 600;
+    transition: opacity .2s;
+  }
+  .wa-btn:hover { opacity: .85; }
+  .num { color: rgba(255,255,255,.4); font-family: monospace; font-size: 12px; }
+  .filter { margin-bottom: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .filter input { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); color: #fff; padding: 8px 12px; border-radius: 10px; font-size: 13px; width: 240px; outline: none; }
+  .filter input::placeholder { color: rgba(255,255,255,.3); }
+  .sent { background: rgba(34,197,94,.1) !important; }
+  .mark-btn { cursor: pointer; background: none; border: 1px solid rgba(255,255,255,.15); color: rgba(255,255,255,.5); padding: 6px 10px; border-radius: 8px; font-size: 11px; }
+  .mark-btn.done { background: rgba(34,197,94,.15); border-color: rgba(34,197,94,.3); color: #4ade80; }
+</style>
+</head>
+<body>
+<h1>📲 Bingo228 — Outreach WhatsApp</h1>
+<p class="sub">Généré le 09/03/2026 à 13:05 · 48 établissements</p>
+
+<div class="stats">
+  <div class="stat"><strong>48</strong><span>Avec WhatsApp</span></div>
+  <div class="stat"><strong id="sent-count">0</strong><span>Envoyés</span></div>
+  <div class="stat"><strong>1</strong><span>Catégories</span></div>
+</div>
+
+<div class="filter">
+  <input type="text" id="search" placeholder="🔍 Filtrer par nom ou lieu..." oninput="filterTable()">
+</div>
+
+<table id="table">
+<thead>
+  <tr>
+    <th>#</th>
+    <th>Établissement</th>
+    <th>Catégorie</th>
+    <th>Lieu</th>
+    <th>Numéro</th>
+    <th>Action</th>
+    <th>Statut</th>
+  </tr>
+</thead>
+<tbody>
+  <tr id="row-1">
+    <td style="color:rgba(255,255,255,.3)">1</td>
+    <td><strong>ROOFTOP LA CASA DE PAPEL</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Avédji</td>
+    <td class="num">+22871717602</td>
+    <td><a class="wa-btn" href="https://wa.me/22871717602?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(1)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-1" onclick="toggleSent(1)">À envoyer</button></td>
+  </tr>
+  <tr id="row-2">
+    <td style="color:rgba(255,255,255,.3)">2</td>
+    <td><strong>ZANZIBAR</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Boulevard du 13 Janvier, vers la Plage</td>
+    <td class="num">+22899010707</td>
+    <td><a class="wa-btn" href="https://wa.me/22899010707?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(2)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-2" onclick="toggleSent(2)">À envoyer</button></td>
+  </tr>
+  <tr id="row-3">
+    <td style="color:rgba(255,255,255,.3)">3</td>
+    <td><strong>EUPHORIA</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Lomégan</td>
+    <td class="num">+22892335359</td>
+    <td><a class="wa-btn" href="https://wa.me/22892335359?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(3)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-3" onclick="toggleSent(3)">À envoyer</button></td>
+  </tr>
+  <tr id="row-4">
+    <td style="color:rgba(255,255,255,.3)">4</td>
+    <td><strong>BEEFCUT GRILLHOUSE</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Novissi</td>
+    <td class="num">+22893101010</td>
+    <td><a class="wa-btn" href="https://wa.me/22893101010?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(4)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-4" onclick="toggleSent(4)">À envoyer</button></td>
+  </tr>
+  <tr id="row-5">
+    <td style="color:rgba(255,255,255,.3)">5</td>
+    <td><strong>MAQUIS CHIC R'R</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Caisse</td>
+    <td class="num">+22870751719</td>
+    <td><a class="wa-btn" href="https://wa.me/22870751719?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(5)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-5" onclick="toggleSent(5)">À envoyer</button></td>
+  </tr>
+  <tr id="row-6">
+    <td style="color:rgba(255,255,255,.3)">6</td>
+    <td><strong>LA CHUNGA BAR RESTAURANT</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Assivito</td>
+    <td class="num">+22879302925</td>
+    <td><a class="wa-btn" href="https://wa.me/22879302925?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(6)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-6" onclick="toggleSent(6)">À envoyer</button></td>
+  </tr>
+  <tr id="row-7">
+    <td style="color:rgba(255,255,255,.3)">7</td>
+    <td><strong>LE  ROOFTOP</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Nyékonakpoè</td>
+    <td class="num">+228 91 84 67 46</td>
+    <td><a class="wa-btn" href="https://wa.me/22891846746?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(7)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-7" onclick="toggleSent(7)">À envoyer</button></td>
+  </tr>
+  <tr id="row-8">
+    <td style="color:rgba(255,255,255,.3)">8</td>
+    <td><strong>OPIUM ROOFTOP</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Agbalépédogan</td>
+    <td class="num">+22899265760</td>
+    <td><a class="wa-btn" href="https://wa.me/22899265760?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(8)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-8" onclick="toggleSent(8)">À envoyer</button></td>
+  </tr>
+  <tr id="row-9">
+    <td style="color:rgba(255,255,255,.3)">9</td>
+    <td><strong>XS LOUNGE</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Tokoin</td>
+    <td class="num">+22870393232</td>
+    <td><a class="wa-btn" href="https://wa.me/22870393232?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(9)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-9" onclick="toggleSent(9)">À envoyer</button></td>
+  </tr>
+  <tr id="row-10">
+    <td style="color:rgba(255,255,255,.3)">10</td>
+    <td><strong>LE RAFITI</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">KLIKAME</td>
+    <td class="num">+22893330000</td>
+    <td><a class="wa-btn" href="https://wa.me/22893330000?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(10)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-10" onclick="toggleSent(10)">À envoyer</button></td>
+  </tr>
+  <tr id="row-11">
+    <td style="color:rgba(255,255,255,.3)">11</td>
+    <td><strong>BAR RESTAURANT LAMANE</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Léo 2000</td>
+    <td class="num">+22898031717</td>
+    <td><a class="wa-btn" href="https://wa.me/22898031717?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(11)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-11" onclick="toggleSent(11)">À envoyer</button></td>
+  </tr>
+  <tr id="row-12">
+    <td style="color:rgba(255,255,255,.3)">12</td>
+    <td><strong>MONSIEUR THE</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Adidogomé</td>
+    <td class="num">+228 90835757</td>
+    <td><a class="wa-btn" href="https://wa.me/22890835757?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(12)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-12" onclick="toggleSent(12)">À envoyer</button></td>
+  </tr>
+  <tr id="row-13">
+    <td style="color:rgba(255,255,255,.3)">13</td>
+    <td><strong>LA TABLE DU DG</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Tokoin</td>
+    <td class="num">+22891935151</td>
+    <td><a class="wa-btn" href="https://wa.me/22891935151?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(13)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-13" onclick="toggleSent(13)">À envoyer</button></td>
+  </tr>
+  <tr id="row-14">
+    <td style="color:rgba(255,255,255,.3)">14</td>
+    <td><strong>TABOO</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Avédji</td>
+    <td class="num">+22893031111</td>
+    <td><a class="wa-btn" href="https://wa.me/22893031111?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(14)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-14" onclick="toggleSent(14)">À envoyer</button></td>
+  </tr>
+  <tr id="row-15">
+    <td style="color:rgba(255,255,255,.3)">15</td>
+    <td><strong>AKIF</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Adidogomé</td>
+    <td class="num">+228 90062124</td>
+    <td><a class="wa-btn" href="https://wa.me/22890062124?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(15)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-15" onclick="toggleSent(15)">À envoyer</button></td>
+  </tr>
+  <tr id="row-16">
+    <td style="color:rgba(255,255,255,.3)">16</td>
+    <td><strong>ZWONDERS</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Adidoadin</td>
+    <td class="num">+22879752215</td>
+    <td><a class="wa-btn" href="https://wa.me/22879752215?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(16)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-16" onclick="toggleSent(16)">À envoyer</button></td>
+  </tr>
+  <tr id="row-17">
+    <td style="color:rgba(255,255,255,.3)">17</td>
+    <td><strong>LOS AMIGOS</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Adidogomé</td>
+    <td class="num">+228 70910622</td>
+    <td><a class="wa-btn" href="https://wa.me/22870910622?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(17)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-17" onclick="toggleSent(17)">À envoyer</button></td>
+  </tr>
+  <tr id="row-18">
+    <td style="color:rgba(255,255,255,.3)">18</td>
+    <td><strong>LE MYTHE LOUNGE</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Nyékonakpoè</td>
+    <td class="num">+22893244296</td>
+    <td><a class="wa-btn" href="https://wa.me/22893244296?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(18)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-18" onclick="toggleSent(18)">À envoyer</button></td>
+  </tr>
+  <tr id="row-19">
+    <td style="color:rgba(255,255,255,.3)">19</td>
+    <td><strong>MERAKI BEACH RESORT-Plage</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Abloganmé</td>
+    <td class="num">+22892007200</td>
+    <td><a class="wa-btn" href="https://wa.me/22892007200?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(19)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-19" onclick="toggleSent(19)">À envoyer</button></td>
+  </tr>
+  <tr id="row-20">
+    <td style="color:rgba(255,255,255,.3)">20</td>
+    <td><strong>RESTAURANT LA BODEGA LOMÉ</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Avénou</td>
+    <td class="num">+22899999956</td>
+    <td><a class="wa-btn" href="https://wa.me/22899999956?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(20)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-20" onclick="toggleSent(20)">À envoyer</button></td>
+  </tr>
+  <tr id="row-21">
+    <td style="color:rgba(255,255,255,.3)">21</td>
+    <td><strong>NEW YORK LOUNGE BAR RESTAURANT</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Avédji</td>
+    <td class="num">+22891409292</td>
+    <td><a class="wa-btn" href="https://wa.me/22891409292?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(21)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-21" onclick="toggleSent(21)">À envoyer</button></td>
+  </tr>
+  <tr id="row-22">
+    <td style="color:rgba(255,255,255,.3)">22</td>
+    <td><strong>LA HUQQA</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Wuiti</td>
+    <td class="num">+22896949494</td>
+    <td><a class="wa-btn" href="https://wa.me/22896949494?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(22)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-22" onclick="toggleSent(22)">À envoyer</button></td>
+  </tr>
+  <tr id="row-23">
+    <td style="color:rgba(255,255,255,.3)">23</td>
+    <td><strong>GLAZE</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Tokoin Hôpital</td>
+    <td class="num">+22890807214</td>
+    <td><a class="wa-btn" href="https://wa.me/22890807214?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(23)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-23" onclick="toggleSent(23)">À envoyer</button></td>
+  </tr>
+  <tr id="row-24">
+    <td style="color:rgba(255,255,255,.3)">24</td>
+    <td><strong>VADUNU</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Adidoadin</td>
+    <td class="num">+22890896862</td>
+    <td><a class="wa-btn" href="https://wa.me/22890896862?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(24)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-24" onclick="toggleSent(24)">À envoyer</button></td>
+  </tr>
+  <tr id="row-25">
+    <td style="color:rgba(255,255,255,.3)">25</td>
+    <td><strong>3.14 ATELIER</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Tokoin Séminaire</td>
+    <td class="num">+22896003338</td>
+    <td><a class="wa-btn" href="https://wa.me/22896003338?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(25)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-25" onclick="toggleSent(25)">À envoyer</button></td>
+  </tr>
+  <tr id="row-26">
+    <td style="color:rgba(255,255,255,.3)">26</td>
+    <td><strong>DUBÉ TWELVE</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Djidjolé</td>
+    <td class="num">+22890680235</td>
+    <td><a class="wa-btn" href="https://wa.me/22890680235?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(26)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-26" onclick="toggleSent(26)">À envoyer</button></td>
+  </tr>
+  <tr id="row-27">
+    <td style="color:rgba(255,255,255,.3)">27</td>
+    <td><strong>LE PHÉNICIEN</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Abloganmé</td>
+    <td class="num">+22897939393</td>
+    <td><a class="wa-btn" href="https://wa.me/22897939393?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(27)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-27" onclick="toggleSent(27)">À envoyer</button></td>
+  </tr>
+  <tr id="row-28">
+    <td style="color:rgba(255,255,255,.3)">28</td>
+    <td><strong>MGM</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Adidogomé</td>
+    <td class="num">+22890031777</td>
+    <td><a class="wa-btn" href="https://wa.me/22890031777?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(28)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-28" onclick="toggleSent(28)">À envoyer</button></td>
+  </tr>
+  <tr id="row-29">
+    <td style="color:rgba(255,255,255,.3)">29</td>
+    <td><strong>STREET KITCHEN</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Nyékonakpoè</td>
+    <td class="num">+22871201051</td>
+    <td><a class="wa-btn" href="https://wa.me/22871201051?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(29)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-29" onclick="toggleSent(29)">À envoyer</button></td>
+  </tr>
+  <tr id="row-30">
+    <td style="color:rgba(255,255,255,.3)">30</td>
+    <td><strong>CHILLILOCO</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Baguida</td>
+    <td class="num">+22892091111</td>
+    <td><a class="wa-btn" href="https://wa.me/22892091111?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(30)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-30" onclick="toggleSent(30)">À envoyer</button></td>
+  </tr>
+  <tr id="row-31">
+    <td style="color:rgba(255,255,255,.3)">31</td>
+    <td><strong>SAVANIA</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Adidogomé</td>
+    <td class="num">+22893108585</td>
+    <td><a class="wa-btn" href="https://wa.me/22893108585?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(31)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-31" onclick="toggleSent(31)">À envoyer</button></td>
+  </tr>
+  <tr id="row-32">
+    <td style="color:rgba(255,255,255,.3)">32</td>
+    <td><strong>LE GOURMET</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Caisse</td>
+    <td class="num">+22890434335</td>
+    <td><a class="wa-btn" href="https://wa.me/22890434335?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(32)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-32" onclick="toggleSent(32)">À envoyer</button></td>
+  </tr>
+  <tr id="row-33">
+    <td style="color:rgba(255,255,255,.3)">33</td>
+    <td><strong>MARIOTA</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Agoè</td>
+    <td class="num">+22893594646</td>
+    <td><a class="wa-btn" href="https://wa.me/22893594646?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(33)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-33" onclick="toggleSent(33)">À envoyer</button></td>
+  </tr>
+  <tr id="row-34">
+    <td style="color:rgba(255,255,255,.3)">34</td>
+    <td><strong>ROOFTOP - BIO HOTEL</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Abloganmé</td>
+    <td class="num">+22879062822</td>
+    <td><a class="wa-btn" href="https://wa.me/22879062822?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(34)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-34" onclick="toggleSent(34)">À envoyer</button></td>
+  </tr>
+  <tr id="row-35">
+    <td style="color:rgba(255,255,255,.3)">35</td>
+    <td><strong>ASM BAR - RESTAURANT - ROOFTOP</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Adidoadin</td>
+    <td class="num">+22899998500</td>
+    <td><a class="wa-btn" href="https://wa.me/22899998500?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(35)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-35" onclick="toggleSent(35)">À envoyer</button></td>
+  </tr>
+  <tr id="row-36">
+    <td style="color:rgba(255,255,255,.3)">36</td>
+    <td><strong>RB KINGS</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Adidoadin</td>
+    <td class="num">+22890758686</td>
+    <td><a class="wa-btn" href="https://wa.me/22890758686?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(36)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-36" onclick="toggleSent(36)">À envoyer</button></td>
+  </tr>
+  <tr id="row-37">
+    <td style="color:rgba(255,255,255,.3)">37</td>
+    <td><strong>RESTAURANT SAINT-GERMAIN</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Kégué</td>
+    <td class="num">+22899992323</td>
+    <td><a class="wa-btn" href="https://wa.me/22899992323?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(37)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-37" onclick="toggleSent(37)">À envoyer</button></td>
+  </tr>
+  <tr id="row-38">
+    <td style="color:rgba(255,255,255,.3)">38</td>
+    <td><strong>BLUE TURTLE BAY-Plage</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Abloganmé</td>
+    <td class="num">+22870004001</td>
+    <td><a class="wa-btn" href="https://wa.me/22870004001?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(38)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-38" onclick="toggleSent(38)">À envoyer</button></td>
+  </tr>
+  <tr id="row-39">
+    <td style="color:rgba(255,255,255,.3)">39</td>
+    <td><strong>L'ÉBÈNE LOUNGE</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Bè</td>
+    <td class="num">+22893299208</td>
+    <td><a class="wa-btn" href="https://wa.me/22893299208?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(39)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-39" onclick="toggleSent(39)">À envoyer</button></td>
+  </tr>
+  <tr id="row-40">
+    <td style="color:rgba(255,255,255,.3)">40</td>
+    <td><strong>WING'S N SHAKE</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Totsi</td>
+    <td class="num">+22893949394</td>
+    <td><a class="wa-btn" href="https://wa.me/22893949394?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(40)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-40" onclick="toggleSent(40)">À envoyer</button></td>
+  </tr>
+  <tr id="row-41">
+    <td style="color:rgba(255,255,255,.3)">41</td>
+    <td><strong>THE PENTHOUSE</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Avédji</td>
+    <td class="num">+22871923333</td>
+    <td><a class="wa-btn" href="https://wa.me/22871923333?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(41)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-41" onclick="toggleSent(41)">À envoyer</button></td>
+  </tr>
+  <tr id="row-42">
+    <td style="color:rgba(255,255,255,.3)">42</td>
+    <td><strong>LA FAVORITE</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Agoè Cacaveli</td>
+    <td class="num">+22870759999</td>
+    <td><a class="wa-btn" href="https://wa.me/22870759999?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(42)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-42" onclick="toggleSent(42)">À envoyer</button></td>
+  </tr>
+  <tr id="row-43">
+    <td style="color:rgba(255,255,255,.3)">43</td>
+    <td><strong>EDEN PLAGE</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Abloganmé</td>
+    <td class="num">+22892061014</td>
+    <td><a class="wa-btn" href="https://wa.me/22892061014?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(43)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-43" onclick="toggleSent(43)">À envoyer</button></td>
+  </tr>
+  <tr id="row-44">
+    <td style="color:rgba(255,255,255,.3)">44</td>
+    <td><strong>MIADJOE</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Aného</td>
+    <td class="num">+22870584848</td>
+    <td><a class="wa-btn" href="https://wa.me/22870584848?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(44)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-44" onclick="toggleSent(44)">À envoyer</button></td>
+  </tr>
+  <tr id="row-45">
+    <td style="color:rgba(255,255,255,.3)">45</td>
+    <td><strong>LE PHILIPAT</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Nyékonakpoè</td>
+    <td class="num">+22890040642</td>
+    <td><a class="wa-btn" href="https://wa.me/22890040642?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(45)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-45" onclick="toggleSent(45)">À envoyer</button></td>
+  </tr>
+  <tr id="row-46">
+    <td style="color:rgba(255,255,255,.3)">46</td>
+    <td><strong>LE KENTIA</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Klikamé</td>
+    <td class="num">+22890747575</td>
+    <td><a class="wa-btn" href="https://wa.me/22890747575?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(46)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-46" onclick="toggleSent(46)">À envoyer</button></td>
+  </tr>
+  <tr id="row-47">
+    <td style="color:rgba(255,255,255,.3)">47</td>
+    <td><strong>O THAÏ</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Caisse</td>
+    <td class="num">+22871161111</td>
+    <td><a class="wa-btn" href="https://wa.me/22871161111?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(47)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-47" onclick="toggleSent(47)">À envoyer</button></td>
+  </tr>
+  <tr id="row-48">
+    <td style="color:rgba(255,255,255,.3)">48</td>
+    <td><strong>ELENA G</strong></td>
+    <td><span class="cat">Bar/Resto</span></td>
+    <td style="color:rgba(255,255,255,.5)">Agoè-Nyivé</td>
+    <td class="num">+22871140812</td>
+    <td><a class="wa-btn" href="https://wa.me/22871140812?text=Bonjour%2C%0A%0ANous%20sommes%20de%20%2ABingo228%2A%20%28bingo228.com%29%2C%20le%20guide%20des%20sorties%20%C3%A0%20Lom%C3%A9.%0A%0AVotre%20%C3%A9tablissement%20est%20r%C3%A9f%C3%A9renc%C3%A9%20sur%20notre%20site%20et%20nous%20souhaiterions%20afficher%20vos%20%2Ahoraires%20d%27ouverture%20exacts%2A%20pour%20mieux%20orienter%20vos%20clients.%0A%0APourriez-vous%20nous%20communiquer%20%3A%0A%E2%80%A2%20Jours%20d%27ouverture%20%28ex%3A%20Lun%E2%80%93Sam%29%0A%E2%80%A2%20Heure%20d%27ouverture%20%28ex%3A%2012h00%29%0A%E2%80%A2%20Heure%20de%20fermeture%20%28ex%3A%2000h00%29%0A%0AMerci%20beaucoup%20%21%20%0A%2AL%27%C3%A9quipe%20Bingo228%2A" target="_blank" onclick="markRow(48)">💬 Envoyer</a></td>
+    <td><button class="mark-btn" id="btn-48" onclick="toggleSent(48)">À envoyer</button></td>
+  </tr>
+</tbody>
+</table>
+
+<script>
+  const sentRows = new Set(JSON.parse(localStorage.getItem('sent') || '[]'));
+  sentRows.forEach(i => applySent(i));
+  updateCount();
+
+  function markRow(i) {
+    sentRows.add(i);
+    applySent(i);
+    localStorage.setItem('sent', JSON.stringify([...sentRows]));
+    updateCount();
+  }
+  function toggleSent(i) {
+    if (sentRows.has(i)) { sentRows.delete(i); clearSent(i); }
+    else { sentRows.add(i); applySent(i); }
+    localStorage.setItem('sent', JSON.stringify([...sentRows]));
+    updateCount();
+  }
+  function applySent(i) {
+    const row = document.getElementById('row-'+i);
+    const btn = document.getElementById('btn-'+i);
+    if (row) row.classList.add('sent');
+    if (btn) { btn.textContent = '✅ Envoyé'; btn.classList.add('done'); }
+  }
+  function clearSent(i) {
+    const row = document.getElementById('row-'+i);
+    const btn = document.getElementById('btn-'+i);
+    if (row) row.classList.remove('sent');
+    if (btn) { btn.textContent = 'À envoyer'; btn.classList.remove('done'); }
+  }
+  function updateCount() {
+    document.getElementById('sent-count').textContent = sentRows.size;
+  }
+  function filterTable() {
+    const q = document.getElementById('search').value.toLowerCase();
+    document.querySelectorAll('#table tbody tr').forEach(row => {
+      row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  }
+</script>
+</body>
+</html>
