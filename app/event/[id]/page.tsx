@@ -11,13 +11,25 @@ import { trackPageView } from "../../../lib/trackViewClient";
 type EventItem = {
   id: string; title: string | null; location: string | null; image: string | null;
   media_urls?: string[] | null; whatsapp: string | null; is_featured: boolean | null;
-  event_date: string | null; event_time: string | null; description: string | null;
+  event_date: string | null; event_end_date: string | null; event_time: string | null; description: string | null;
   interest_count: number | null;
 };
 
 function normalizePhoneToWa(phone: string) {
   const cleaned = phone.replace(/[^\d+]/g, "");
   return cleaned.startsWith("+") ? cleaned.slice(1) : cleaned;
+}
+
+function formatRangeFr(start: string | null, end: string | null): string {
+  const s = start ? new Date(start + "T00:00:00") : null;
+  const e = end   ? new Date(end   + "T00:00:00") : null;
+  if (!s) return "Date à confirmer";
+  const sm = s.toLocaleDateString("fr-FR", { day: "2-digit", month: "long" });
+  if (!e || e.getTime() === s.getTime()) return sm;
+  if (s.getMonth() === e.getMonth() && s.getFullYear() === e.getFullYear()) {
+    return `${s.getDate().toString().padStart(2,"0")} – ${e.toLocaleDateString("fr-FR", { day:"2-digit", month:"long" })}`;
+  }
+  return `${s.toLocaleDateString("fr-FR", { day:"2-digit", month:"short" })} – ${e.toLocaleDateString("fr-FR", { day:"2-digit", month:"long" })}`;
 }
 
 function parseEventDate(dateStr: string | null): Date | null {
@@ -71,6 +83,7 @@ export default function EventDetailPage() {
 
   const dateTxt = useMemo(() => {
     if (!event) return "";
+    if (event.event_end_date) return formatRangeFr(event.event_date, event.event_end_date);
     const d = parseEventDate(event.event_date);
     return d ? formatDateFr(d) : "Date ?";
   }, [event]);
@@ -153,13 +166,20 @@ export default function EventDetailPage() {
             <button onClick={() => router.back()}
               className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition"
               style={{ border:"1px solid rgba(255,255,255,.15)", padding:"6px 14px", borderRadius:12 }}>
-              ← Retour
+              ← <span className="hidden sm:inline">Retour</span>
             </button>
-            <button onClick={handleShare}
-              className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition"
-              style={{ border:"1px solid rgba(255,255,255,.15)", padding:"6px 14px", borderRadius:12 }}>
-              🔗 Partager
-            </button>
+            <div className="flex items-center gap-2">
+              <a href="/events" className="text-sm text-white/70 hover:text-white transition"
+                style={{ border:"1px solid rgba(255,255,255,.15)", padding:"6px 12px", borderRadius:12 }}>
+                <span className="hidden sm:inline">🎉 Events</span>
+                <span className="sm:hidden">🎉</span>
+              </a>
+              <button onClick={handleShare}
+                className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition"
+                style={{ border:"1px solid rgba(255,255,255,.15)", padding:"6px 14px", borderRadius:12 }}>
+                🔗 <span className="hidden sm:inline">Partager</span>
+              </button>
+            </div>
           </div>
 
           {/* 2-COLUMN */}

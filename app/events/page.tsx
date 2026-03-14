@@ -12,6 +12,7 @@ type EventItem = {
   image: string | null;
   whatsapp: string | null;
   event_date?: string | null;
+  event_end_date?: string | null;
   event_time?: string | null;
   is_featured?: boolean | null;
   featured_rank?: number | null;
@@ -42,7 +43,20 @@ function parseEventDate(e: EventItem): Date | null {
 }
 
 function formatDateFr(d: Date) {
-  return d.toLocaleDateString("fr-FR", { weekday: "short", day: "2-digit", month: "short" });
+  return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
+}
+
+function formatRangeFr(start: string | null | undefined, end: string | null | undefined): string {
+  const s = start ? new Date(start + "T00:00:00") : null;
+  const e = end   ? new Date(end   + "T00:00:00") : null;
+  if (!s) return "Date ?";
+  const sm = s.toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
+  if (!e || e.getTime() === s.getTime()) return sm;
+  // même mois ?
+  if (s.getMonth() === e.getMonth() && s.getFullYear() === e.getFullYear()) {
+    return `${s.getDate().toString().padStart(2,"0")} – ${e.toLocaleDateString("fr-FR", { day:"2-digit", month:"short" })}`;
+  }
+  return `${sm} – ${e.toLocaleDateString("fr-FR", { day:"2-digit", month:"short" })}`;
 }
 
 function formatTimeHM(t?: string | null) {
@@ -312,7 +326,7 @@ export default function EventsPage() {
 function HeroEventCard({ event }: { event: EventItem }) {
   const router = useRouter();
   const d = parseEventDate(event);
-  const dateText = d ? formatDateFr(d) : null;
+  const dateText = formatRangeFr(event.event_date, event.event_end_date);
   const timeText = formatTimeHM(event.event_time);
 
   return (
@@ -373,7 +387,7 @@ function HeroEventCard({ event }: { event: EventItem }) {
 function EventCard({ event, compact }: { event: EventItem; compact?: boolean }) {
   const router = useRouter();
   const d = parseEventDate(event);
-  const dateText = d ? formatDateFr(d) : "Date ?";
+  const dateText = formatRangeFr(event.event_date, event.event_end_date);
   const timeText = formatTimeHM(event.event_time);
 
   return (

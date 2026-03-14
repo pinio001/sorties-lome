@@ -19,6 +19,7 @@ type Row = {
   tiktok_url?: string;
   website_url?: string;
   event_date?: string;
+  event_end_date?: string;
   event_time?: string;
   is_featured?: string;
   _status?: "pending" | "ok" | "error";
@@ -129,8 +130,9 @@ function buildPayload(r: Row, type: ImportType) {
     return {
       title:         r.title?.trim() || null,
       location:      r.location?.trim() || null,
-      event_date:    convertDate(r.event_date),
-      event_time:    r.event_time?.trim() || null,
+      event_date:     convertDate(r.event_date),
+      event_end_date: convertDate(r.event_end_date),
+      event_time:     r.event_time?.trim() || null,
       whatsapp:      r.whatsapp?.trim() || null,
       description:   r.description?.trim() || null,
       image:         imageUrl,
