@@ -58,6 +58,24 @@ function convertDate(raw: string | undefined): string | null {
   return s || null;
 }
 
+// Convertit un décimal Excel (ex: 0.583) ou "14:00" → "HH:MM"
+function convertTime(raw: string | undefined): string | null {
+  if (!raw) return null;
+  const s = String(raw).trim();
+  if (!s) return null;
+  // Déjà au format HH:MM ou HH:MM:SS
+  if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(s)) return s.slice(0, 5);
+  // Décimal Excel (0.0 à 1.0 représente 00:00 à 24:00)
+  const n = parseFloat(s);
+  if (!isNaN(n) && n >= 0 && n < 1) {
+    const totalMinutes = Math.round(n * 24 * 60);
+    const h = Math.floor(totalMinutes / 60).toString().padStart(2, "0");
+    const m = (totalMinutes % 60).toString().padStart(2, "0");
+    return `${h}:${m}`;
+  }
+  return null;
+}
+
 function parseExcel(buffer: ArrayBuffer, type: ImportType): Row[] {
   const wb = XLSX.read(buffer, { type: "array", cellDates: false });
   const ws = wb.Sheets[wb.SheetNames[0]];
@@ -132,7 +150,7 @@ function buildPayload(r: Row, type: ImportType) {
       location:      r.location?.trim() || null,
       event_date:     convertDate(r.event_date),
       event_end_date: convertDate(r.event_end_date),
-      event_time:     r.event_time?.trim() || null,
+      event_time:     convertTime(r.event_time) || null,
       whatsapp:      r.whatsapp?.trim() || null,
       description:   r.description?.trim() || null,
       image:         imageUrl,
