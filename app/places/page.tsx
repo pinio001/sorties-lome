@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import BingoBackground from "../components/BingoBackground";
@@ -61,12 +61,35 @@ export default function PlacesPage() {
   const [tab, setTab]         = useState<TabKey>("bar_resto");
   const [q, setQ]             = useState("");
   const [loc, setLoc]         = useState("TOUS");
+  const [visible, setVisible] = useState(true);
+  const scrollTarget          = useRef<number | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    const t = new URLSearchParams(window.location.search).get("tab");
-    if (t) setTab(t as TabKey);
+    const saved = sessionStorage.getItem("places_scroll");
+    if (saved) {
+      const { scrollY, tab: savedTab } = JSON.parse(saved);
+      if (savedTab) setTab(savedTab as TabKey);
+      scrollTarget.current = scrollY;
+      setVisible(false);
+    } else {
+      const t = new URLSearchParams(window.location.search).get("tab") ?? new URLSearchParams(window.location.search).get("cat");
+      if (t) setTab(t as TabKey);
+    }
   }, []);
+
+  // Scroller une fois les données chargées
+  useEffect(() => {
+    if (!loading && scrollTarget.current !== null) {
+      const target = scrollTarget.current;
+      scrollTarget.current = null;
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: target, behavior: "instant" });
+        sessionStorage.removeItem("places_scroll");
+        setVisible(true);
+      });
+    }
+  }, [loading]);
 
   const handleTabChange = (t: TabKey) => {
     setTab(t);
@@ -182,7 +205,7 @@ export default function PlacesPage() {
 
       <div className="grain-overlay" />
 
-      <main className="places-root min-h-screen relative"
+      <main className="places-root min-h-screen relative" style={{ opacity: visible ? 1 : 0 }}
         style={{ background: "linear-gradient(160deg,#060a12 0%,#0c1220 60%,#060a12 100%)" }}>
         <BingoBackground />
 
@@ -369,7 +392,7 @@ export default function PlacesPage() {
 function HeroCard({ place, activeTab, accentColor }: { place: PlaceItem; activeTab: string; accentColor: string }) {
   const router = useRouter();
   const primary: string | null = place.image || (Array.isArray(place.media_urls) && place.media_urls[0]) || null;
-  const goDetails = () => router.push(`/place/${place.id}?cat=${encodeURIComponent(activeTab)}`);
+  const goDetails = () => { sessionStorage.setItem("places_scroll", JSON.stringify({ scrollY: window.scrollY, tab: activeTab })); router.push(`/place/${place.id}?cat=${encodeURIComponent(activeTab)}`); };
 
   return (
     <div className="hero-card cursor-pointer rounded-3xl overflow-hidden relative"
@@ -436,7 +459,7 @@ function PlaceCard({ place, activeTab, accentColor, compact, rank }:
   const router = useRouter();
   const primary: string | null = place.image || (Array.isArray(place.media_urls) && place.media_urls[0]) || null;
   const isVideo = primary?.match(/\.(mp4|webm|ogg)$/i);
-  const goDetails = () => router.push(`/place/${place.id}?cat=${encodeURIComponent(activeTab)}`);
+  const goDetails = () => { sessionStorage.setItem("places_scroll", JSON.stringify({ scrollY: window.scrollY, tab: activeTab })); router.push(`/place/${place.id}?cat=${encodeURIComponent(activeTab)}`); };
 
   return (
     <div className="place-card cursor-pointer rounded-2xl overflow-hidden"

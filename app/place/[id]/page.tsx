@@ -61,6 +61,16 @@ const EXTERNAL_LINKS = [
 export default function PlaceDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+
+  const handleBack = () => {
+    const saved = sessionStorage.getItem("places_scroll");
+    if (saved) {
+      const { tab } = JSON.parse(saved);
+      router.push(`/places${tab && tab !== "bar_resto" ? `?tab=${tab}` : ""}`);
+    } else {
+      router.push("/places");
+    }
+  };
   const sp = useSearchParams();
   const placeId = params?.id;
 
@@ -146,7 +156,7 @@ export default function PlaceDetailPage() {
       <BingoBackground />
       <div className="relative z-10 max-w-6xl mx-auto px-4 pt-10">
         <p className="text-red-400 text-sm mb-4">{errorMsg ?? "Introuvable"}</p>
-        <button onClick={() => router.back()} className="text-white border border-white/20 px-4 py-2 rounded-xl hover:bg-white/10 transition">← Retour</button>
+        <button onClick={handleBack} className="text-white border border-white/20 px-4 py-2 rounded-xl hover:bg-white/10 transition">← Retour</button>
       </div>
     </main>
   );
@@ -179,16 +189,23 @@ export default function PlaceDetailPage() {
 
           {/* TOP NAV */}
           <div className="anim-in flex items-center justify-between mb-6">
-            <button onClick={() => router.back()}
+            <button onClick={handleBack}
               className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition"
               style={{ border:"1px solid rgba(255,255,255,.15)", padding:"6px 14px", borderRadius:12 }}>
-              ← Retour
+              ← <span className="hidden sm:inline">Retour</span>
             </button>
-            <button onClick={handleShare}
-              className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition"
-              style={{ border:"1px solid rgba(255,255,255,.15)", padding:"6px 14px", borderRadius:12 }}>
-              🔗 Partager
-            </button>
+            <div className="flex items-center gap-2">
+              <a href="/places" className="text-sm text-white/70 hover:text-white transition"
+                style={{ border:"1px solid rgba(255,255,255,.15)", padding:"6px 12px", borderRadius:12 }}>
+                <span className="hidden sm:inline">📍 Places</span>
+                <span className="sm:hidden">📍</span>
+              </a>
+              <button onClick={handleShare}
+                className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition"
+                style={{ border:"1px solid rgba(255,255,255,.15)", padding:"6px 14px", borderRadius:12 }}>
+                🔗 <span className="hidden sm:inline">Partager</span>
+              </button>
+            </div>
           </div>
 
           {/* 2-COLUMN LAYOUT */}
