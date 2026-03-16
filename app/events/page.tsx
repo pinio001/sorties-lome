@@ -212,7 +212,7 @@ export default function EventsPage() {
 
       <div className="grain" />
 
-      // ✅ Un seul style fusionné
+      
       <main className="ev-root min-h-screen relative"
         style={{ opacity: visible ? 1 : 0, background:"linear-gradient(160deg,#060a12 0%,#0c1220 60%,#060a12 100%)" }}>
 
