@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import BingoBackground from "../components/BingoBackground";
@@ -75,6 +75,9 @@ export default function EventsPage() {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TabKey>("all");
+  const [visible, setVisible] = useState(true);
+
+  const scrollTarget = useRef<number | null>(null);
 
   useEffect(() => {
     // Restaurer tab et position de scroll après retour depuis détail
@@ -82,14 +85,26 @@ export default function EventsPage() {
     if (saved) {
       const { scrollY, tab: savedTab } = JSON.parse(saved);
       if (savedTab) setTab(savedTab as TabKey);
-      sessionStorage.removeItem("events_scroll");
-      // Attendre que les cards soient rendues
-      requestAnimationFrame(() => setTimeout(() => window.scrollTo({ top: scrollY, behavior: "instant" }), 80));
+      scrollTarget.current = scrollY;
+      setVisible(false); // masquer pendant le chargement
     } else {
       const t = new URLSearchParams(window.location.search).get("tab");
       if (t) setTab(t as TabKey);
     }
   }, []);
+
+  // Scroller une fois les données chargées
+  useEffect(() => {
+    if (!loading && scrollTarget.current !== null) {
+      const target = scrollTarget.current;
+      scrollTarget.current = null;
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: target, behavior: "instant" });
+        sessionStorage.removeItem("events_scroll");
+        setVisible(true); // révéler la page une fois en position
+      });
+    }
+  }, [loading]);
 
   const handleTabChange = (t: TabKey) => {
     setTab(t);
@@ -197,7 +212,7 @@ export default function EventsPage() {
 
       <div className="grain" />
 
-      <main className="ev-root min-h-screen relative"
+      <main className="ev-root min-h-screen relative" style={{ opacity: visible ? 1 : 0 }}
         style={{ background:"linear-gradient(160deg,#060a12 0%,#0c1220 60%,#060a12 100%)" }}>
         <BingoBackground />
 

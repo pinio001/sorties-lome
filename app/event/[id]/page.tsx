@@ -56,9 +56,11 @@ export default function EventDetailPage() {
   const router = useRouter();
 
   const handleBack = () => {
-    // Si on vient de la liste events, router.back() restaurera le scroll via sessionStorage
-    if (document.referrer.includes("/events") || sessionStorage.getItem("events_scroll") !== null) {
-      router.back();
+    // On utilise push (pas back) pour contrôler la restauration du scroll via sessionStorage
+    const saved = sessionStorage.getItem("events_scroll");
+    if (saved) {
+      const { tab } = JSON.parse(saved);
+      router.push(`/events${tab && tab !== "all" ? `?tab=${tab}` : ""}`);
     } else {
       router.push("/events");
     }
