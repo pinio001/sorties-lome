@@ -77,8 +77,18 @@ export default function EventsPage() {
   const [tab, setTab] = useState<TabKey>("all");
 
   useEffect(() => {
-    const t = new URLSearchParams(window.location.search).get("tab");
-    if (t) setTab(t as TabKey);
+    // Restaurer tab et position de scroll après retour depuis détail
+    const saved = sessionStorage.getItem("events_scroll");
+    if (saved) {
+      const { scrollY, tab: savedTab } = JSON.parse(saved);
+      if (savedTab) setTab(savedTab as TabKey);
+      sessionStorage.removeItem("events_scroll");
+      // Attendre que les cards soient rendues
+      requestAnimationFrame(() => setTimeout(() => window.scrollTo({ top: scrollY, behavior: "instant" }), 80));
+    } else {
+      const t = new URLSearchParams(window.location.search).get("tab");
+      if (t) setTab(t as TabKey);
+    }
   }, []);
 
   const handleTabChange = (t: TabKey) => {
@@ -282,12 +292,12 @@ export default function EventsPage() {
                   </div>
 
                   {featured.length === 1 ? (
-                    <HeroEventCard event={featured[0]} />
+                    <HeroEventCard event={featured[0]} activeTab={tab} />
                   ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      <HeroEventCard event={featured[0]} />
+                      <HeroEventCard event={featured[0]} activeTab={tab} />
                       <div className="grid gap-4">
-                        {featured.slice(1, 3).map((ev) => <EventCard key={ev.id} event={ev} compact />)}
+                        {featured.slice(1, 3).map((ev) => <EventCard key={ev.id} event={ev} compact activeTab={tab} />)}
                       </div>
                     </div>
                   )}
@@ -304,7 +314,7 @@ export default function EventsPage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {filtered.map((ev) => <EventCard key={ev.id} event={ev} />)}
+                {filtered.map((ev) => <EventCard key={ev.id} event={ev} activeTab={tab} />)}
               </div>
 
               {filtered.length === 0 && (
@@ -323,7 +333,7 @@ export default function EventsPage() {
   );
 }
 
-function HeroEventCard({ event }: { event: EventItem }) {
+function HeroEventCard({ event, activeTab }: { event: EventItem; activeTab: string }) {
   const router = useRouter();
   const d = parseEventDate(event);
   const dateText = formatRangeFr(event.event_date, event.event_end_date);
@@ -332,7 +342,7 @@ function HeroEventCard({ event }: { event: EventItem }) {
   return (
     <div className="hero-ev cursor-pointer rounded-3xl overflow-hidden relative"
       style={{ height:380, border:"1px solid rgba(255,255,255,.1)", boxShadow:"0 20px 60px rgba(0,0,0,.5)" }}
-      onClick={() => router.push(`/event/${event.id}`)}>
+      onClick={() => { sessionStorage.setItem("events_scroll", JSON.stringify({ scrollY: window.scrollY, tab: activeTab })); router.push(`/event/${event.id}`); }}>
       {event.image ? (
         <img src={event.image} alt={event.title ?? ""} className="card-img absolute inset-0 w-full h-full object-cover" />
       ) : (
@@ -364,7 +374,7 @@ function HeroEventCard({ event }: { event: EventItem }) {
           <div style={{ fontSize:12, color:"rgba(255,255,255,.55)", marginBottom:14 }}>📍 {event.location}</div>
         )}
         <div className="flex gap-2">
-          <button onClick={(e) => { e.stopPropagation(); router.push(`/event/${event.id}`); }}
+          <button onClick={(e) => { e.stopPropagation(); sessionStorage.setItem("events_scroll", JSON.stringify({ scrollY: window.scrollY, tab: activeTab })); router.push(`/event/${event.id}`); }}
             className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
             style={{ background:"#fff", color:"#000", fontFamily:"DM Sans" }}>
             Voir l'event
@@ -384,7 +394,7 @@ function HeroEventCard({ event }: { event: EventItem }) {
   );
 }
 
-function EventCard({ event, compact }: { event: EventItem; compact?: boolean }) {
+function EventCard({ event, compact, activeTab }: { event: EventItem; compact?: boolean; activeTab: string }) {
   const router = useRouter();
   const d = parseEventDate(event);
   const dateText = formatRangeFr(event.event_date, event.event_end_date);
@@ -393,7 +403,7 @@ function EventCard({ event, compact }: { event: EventItem; compact?: boolean }) 
   return (
     <div className="ev-card cursor-pointer rounded-2xl overflow-hidden"
       style={{ border:"1px solid rgba(255,255,255,.08)", background:"rgba(255,255,255,.04)", boxShadow:"0 4px 24px rgba(0,0,0,.3)" }}
-      onClick={() => router.push(`/event/${event.id}`)}>
+      onClick={() => { sessionStorage.setItem("events_scroll", JSON.stringify({ scrollY: window.scrollY, tab: activeTab })); router.push(`/event/${event.id}`); }}>
 
       <div className="relative overflow-hidden" style={{ height: compact ? 130 : 200 }}>
         {event.image ? (
@@ -424,7 +434,7 @@ function EventCard({ event, compact }: { event: EventItem; compact?: boolean }) 
           <div style={{ fontSize:12, color:"rgba(255,255,255,.4)", marginBottom:12 }}>📍 {event.location}</div>
         )}
         <div className="flex gap-2 mt-3">
-          <button onClick={(e) => { e.stopPropagation(); router.push(`/event/${event.id}`); }}
+          <button onClick={(e) => { e.stopPropagation(); sessionStorage.setItem("events_scroll", JSON.stringify({ scrollY: window.scrollY, tab: activeTab })); router.push(`/event/${event.id}`); }}
             className="flex-1 py-2 rounded-xl text-xs font-semibold"
             style={{ background:"#fff", color:"#000", fontFamily:"DM Sans" }}>
             Détails

@@ -54,6 +54,15 @@ function getOrCreateDeviceId() {
 export default function EventDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+
+  const handleBack = () => {
+    // Si on vient de la liste events, router.back() restaurera le scroll via sessionStorage
+    if (document.referrer.includes("/events") || sessionStorage.getItem("events_scroll") !== null) {
+      router.back();
+    } else {
+      router.push("/events");
+    }
+  };
   const eventId = params?.id;
 
   const [event, setEvent]           = useState<EventItem | null>(null);
@@ -131,7 +140,7 @@ export default function EventDetailPage() {
       <BingoBackground />
       <div className="relative z-10 max-w-6xl mx-auto px-4 pt-10">
         <p className="text-red-400 text-sm mb-4">{errorMsg ?? "Événement introuvable"}</p>
-        <button onClick={() => router.back()} className="text-white border border-white/20 px-4 py-2 rounded-xl hover:bg-white/10 transition">← Retour</button>
+        <button onClick={handleBack} className="text-white border border-white/20 px-4 py-2 rounded-xl hover:bg-white/10 transition">← Retour</button>
       </div>
     </main>
   );
@@ -163,7 +172,7 @@ export default function EventDetailPage() {
 
           {/* TOP NAV */}
           <div className="anim-in flex items-center justify-between mb-6">
-            <button onClick={() => router.back()}
+            <button onClick={handleBack}
               className="flex items-center gap-2 text-sm text-white/70 hover:text-white transition"
               style={{ border:"1px solid rgba(255,255,255,.15)", padding:"6px 14px", borderRadius:12 }}>
               ← <span className="hidden sm:inline">Retour</span>
