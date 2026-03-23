@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import BingoBackground from "../components/BingoBackground";
+import FeedbackPopup from "../components/FeedbackPopup";
 
 type EventItem = {
   id: string;
@@ -344,6 +345,7 @@ export default function EventsPage() {
           )}
         </div>
       </main>
+      <FeedbackPopup />
     </>
   );
 }

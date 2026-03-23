@@ -204,7 +204,7 @@ export default function HomePage() {
                 <button onClick={() => router.push("/events")}
                   className="btn-secondary flex-1 rounded-2xl py-3.5 text-white"
                   style={{ border:"1px solid rgba(255,255,255,.2)", backdropFilter:"blur(10px)",
-                    background:"rgba(255,255,255,.05)", fontFamily:"DM Sans", fontSize:"clamp(13px,1vw,15px)" }}>
+                    background:"rgba(255,255,255,0.1)", fontFamily:"DM Sans", fontSize:"clamp(13px,1vw,15px)" }}>
                   🎉 Voir les Events
                 </button>
               </div>
