@@ -358,17 +358,16 @@ export default function ImportPage() {
                       <div className="mt-1">
                         <MultiImageUploader
                           folder={importType === "place" ? "places" : "events"}
-                          value={""}
-                          onChange={(url) => {
+                          values={r.media ? r.media.split("|").filter(Boolean) : []}
+                          onChange={(urls) => {
                             setRows((prev) => prev.map((row, idx) =>
                               idx === i
                                 ? importType === "place"
-                                  ? { ...row, media: url }
-                                  : { ...row, image: url }
+                                  ? { ...row, media: urls.join("|") }
+                                  : { ...row, image: urls[0] ?? "" }
                                 : row
                             ));
                           }}
-                          label="Ajouter une image"
                         />
                       </div>
                     )}
