@@ -4,9 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import BingoBackground from "../components/BingoBackground";
-import FeedbackPopup from "../components/FeedbackPopup";
-
-
 
 type EventItem = {
   id: string;
@@ -117,7 +114,7 @@ export default function EventsPage() {
   };
 
   useEffect(() => {
-    supabase.from("events").select("*").order("created_at", { ascending: false })
+    supabase.from("events").select("*").order("display_order", { ascending: true }).order("created_at", { ascending: false })
       .then(({ data }) => { setEvents((data ?? []) as EventItem[]); setLoading(false); });
   }, []);
 
@@ -215,9 +212,9 @@ export default function EventsPage() {
 
       <div className="grain" />
 
-      
       <main className="ev-root min-h-screen relative"
         style={{ opacity: visible ? 1 : 0, background:"linear-gradient(160deg,#060a12 0%,#0c1220 60%,#060a12 100%)" }}>
+        <BingoBackground />
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 lg:px-10 pt-6 pb-16">
 
@@ -347,7 +344,6 @@ export default function EventsPage() {
           )}
         </div>
       </main>
-      <FeedbackPopup />
     </>
   );
 }

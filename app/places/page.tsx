@@ -4,8 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import BingoBackground from "../components/BingoBackground";
-import FeedbackPopup from "../components/FeedbackPopup";
-
 
 type PlaceItem = {
   id: string;
@@ -101,7 +99,7 @@ export default function PlacesPage() {
   };
 
   useEffect(() => {
-    supabase.from("places").select("*").order("created_at", { ascending: false })
+    supabase.from("places").select("*").order("display_order", { ascending: true }).order("created_at", { ascending: false })
       .then(({ data }) => { setPlaces((data ?? []) as PlaceItem[]); setLoading(false); });
   }, []);
 
@@ -207,9 +205,9 @@ export default function PlacesPage() {
 
       <div className="grain-overlay" />
 
-      <main className="places-root min-h-screen relative" style={{ opacity: visible ? 1 : 0 , background: "linear-gradient(160deg,#060a12 0%,#0c1220 60%,#060a12 100%)" }}>
+      <main className="places-root min-h-screen relative" style={{ opacity: visible ? 1 : 0 }}
+        style={{ background: "linear-gradient(160deg,#060a12 0%,#0c1220 60%,#060a12 100%)" }}>
         <BingoBackground />
-        <FeedbackPopup />
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 lg:px-10 pt-6 pb-16">
 
