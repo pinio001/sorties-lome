@@ -7,7 +7,6 @@ import { useEffect, useRef, useState } from "react";
 
 const STORAGE_KEY = "bingo_feedback_last";
 const DELAY_MS    = 30_000; // 30 secondes
-const COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000; // 1 semaine
 
 export default function FeedbackPopup() {
   const [open, setOpen]         = useState(false);
@@ -20,8 +19,7 @@ export default function FeedbackPopup() {
 
   useEffect(() => {
     // Vérifier si affiché récemment
-    const last = localStorage.getItem(STORAGE_KEY);
-    if (last && Date.now() - Number(last) < COOLDOWN_MS) return;
+    if (sessionStorage.getItem(STORAGE_KEY)) return;
 
     timerRef.current = setTimeout(() => setOpen(true), DELAY_MS);
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
@@ -29,7 +27,7 @@ export default function FeedbackPopup() {
 
   const dismiss = () => {
     setOpen(false);
-    localStorage.setItem(STORAGE_KEY, String(Date.now()));
+    sessionStorage.setItem(STORAGE_KEY, String(Date.now()));
   };
 
   const selectRating = (r: number) => {
@@ -50,7 +48,7 @@ export default function FeedbackPopup() {
     setSending(false);
     setStep("done");
     setTimeout(() => { setOpen(false); }, 2500);
-    localStorage.setItem(STORAGE_KEY, String(Date.now()));
+    sessionStorage.setItem(STORAGE_KEY, String(Date.now()));
   };
 
   if (!open) return null;
