@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import BingoBackground from "../../components/BingoBackground";
-import ImageUploader from "../../components/ImageUploader";
+import MultiImageUploader from "../../components/MultiImageUploader";
 import * as XLSX from "xlsx";
 
 type ImportType = "place" | "event";
@@ -356,7 +356,7 @@ export default function ImportPage() {
                     {/* Upload inline si pas d'image */}
                     {!(r.media || r.image) && r._status !== "ok" && (
                       <div className="mt-1">
-                        <ImageUploader
+                        <MultiImageUploader
                           folder={importType === "place" ? "places" : "events"}
                           value={""}
                           onChange={(url) => {
