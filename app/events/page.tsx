@@ -6,8 +6,7 @@ import { useRouter } from "next/navigation";
 import BingoBackground from "../components/BingoBackground";
 import FeedbackPopup from "../components/FeedbackPopup";
 
-// Dans le return, juste avant la fermeture du fragment </> :
-<FeedbackPopup />
+
 
 type EventItem = {
   id: string;
@@ -348,6 +347,7 @@ export default function EventsPage() {
           )}
         </div>
       </main>
+      <FeedbackPopup />
     </>
   );
 }
