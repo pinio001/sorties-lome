@@ -4,6 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import BingoBackground from "../components/BingoBackground";
+import FeedbackPopup from "../components/FeedbackPopup";
+
+// Dans le return, juste avant la fermeture du fragment </> :
+<FeedbackPopup />
 
 type EventItem = {
   id: string;
