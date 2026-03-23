@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import BingoBackground from "../components/BingoBackground";
-import ImageUploader from "../components/ImageUploader";
+import MultiImageUploader from "../components/MultiImageUploader";
 
 type FormType = "place" | "event";
 
@@ -34,7 +34,7 @@ export default function SoumettreePage() {
   const [location, setLocation] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [description, setDescription] = useState("");
-  const [image, setImage] = useState("");
+  const [images, setImages] = useState<string[]>([]);
   const [mapsUrl, setMapsUrl] = useState("");
   const [instagramUrl, setInstagramUrl] = useState("");
 
@@ -43,9 +43,11 @@ export default function SoumettreePage() {
   const [eventDate, setEventDate] = useState("");
   const [eventTime, setEventTime] = useState("");
 
-  // Erreurs téléphone
+  // Erreurs champs
   const [whatsappError, setWhatsappError] = useState("");
   const [submitterPhoneError, setSubmitterPhoneError] = useState("");
+  const [locationError, setLocationError] = useState("");
+  const [imageError, setImageError] = useState("");
 
   const handleWhatsappChange = (val: string) => {
     setWhatsapp(val);
@@ -64,6 +66,9 @@ export default function SoumettreePage() {
   const send = async () => {
     if (type === "place" && !name.trim()) return alert("Le nom du lieu est requis");
     if (type === "event" && !title.trim()) return alert("Le titre est requis");
+    if (!location.trim()) { setLocationError("Ce champ est requis"); return; }
+    if (!whatsapp.trim()) { setWhatsappError("Le numéro WhatsApp est requis"); return; }
+    if (images.length === 0) { setImageError("Au moins une image est requise"); return; }
     if (whatsappError || submitterPhoneError) return alert("Corrigez les erreurs de format de téléphone");
     if (whatsapp && !isValidPhone(whatsapp)) return alert("Format WhatsApp invalide : +228XXXXXXXX");
 
@@ -75,11 +80,15 @@ export default function SoumettreePage() {
         body: JSON.stringify({
           type,
           data: type === "place"
-            ? { name, category, location, whatsapp, description, image,
+            ? { name, category, location, whatsapp, description,
+                image: images[0] ?? null,
+                media_urls: images,
                 maps_url: mapsUrl, instagram_url: instagramUrl,
                 submitter_name: submitterName, submitter_phone: submitterPhone }
             : { title, event_date: eventDate, event_time: eventTime,
-                location, whatsapp, description, image,
+                location, whatsapp, description,
+                image: images[0] ?? null,
+                media_urls: images,
                 submitter_name: submitterName, submitter_phone: submitterPhone },
         }),
       });
@@ -182,16 +191,19 @@ export default function SoumettreePage() {
                 {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
 
-              {/* Quartier — 1ère lettre majuscule */}
-              <input className={inputClass}
-                placeholder="Quartier / Zone (ex: Kégué, Tokoin...)"
-                value={location}
-                onChange={(e) => setLocation(capitalizeFirst(e.target.value))} />
+              {/* Quartier — 1ère lettre majuscule — obligatoire */}
+              <div>
+                <input className={`${inputClass} ${locationError ? "border-red-500/50" : ""}`}
+                  placeholder="Quartier / Zone (ex: Kégué, Tokoin...) *"
+                  value={location}
+                  onChange={(e) => { setLocation(capitalizeFirst(e.target.value)); setLocationError(""); }} />
+                {locationError && <div className={errorClass}>⚠️ {locationError}</div>}
+              </div>
 
               {/* WhatsApp avec validation */}
               <div>
                 <input className={`${inputClass} ${whatsappError ? "border-red-500/50" : ""}`}
-                  placeholder="WhatsApp (ex: +22871529865)"
+                  placeholder="WhatsApp (ex: +22871529865) *"
                   value={whatsapp}
                   onChange={(e) => handleWhatsappChange(e.target.value)} />
                 {whatsappError && <div className={errorClass}>⚠️ {whatsappError}</div>}
@@ -206,7 +218,11 @@ export default function SoumettreePage() {
               <input className={inputClass}
                 placeholder="Instagram (optionnel)"
                 value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} />
-              <ImageUploader folder="places" value={image} onChange={setImage} />
+              <div>
+                <MultiImageUploader folder="places" values={images}
+                  onChange={(urls) => { setImages(urls); setImageError(""); }} />
+                {imageError && <div className={errorClass}>⚠️ {imageError}</div>}
+              </div>
             </>
           ) : (
             <>
@@ -221,16 +237,19 @@ export default function SoumettreePage() {
               <input type="time" className={inputClass}
                 value={eventTime} onChange={(e) => setEventTime(e.target.value)} />
 
-              {/* Lieu event — 1ère lettre majuscule */}
-              <input className={inputClass}
-                placeholder="Lieu (ex: Playce Rooftop, Lomé)"
-                value={location}
-                onChange={(e) => setLocation(capitalizeFirst(e.target.value))} />
+              {/* Lieu event — obligatoire */}
+              <div>
+                <input className={`${inputClass} ${locationError ? "border-red-500/50" : ""}`}
+                  placeholder="Lieu (ex: Playce Rooftop, Lomé) *"
+                  value={location}
+                  onChange={(e) => { setLocation(capitalizeFirst(e.target.value)); setLocationError(""); }} />
+                {locationError && <div className={errorClass}>⚠️ {locationError}</div>}
+              </div>
 
               {/* WhatsApp event avec validation */}
               <div>
                 <input className={`${inputClass} ${whatsappError ? "border-red-500/50" : ""}`}
-                  placeholder="WhatsApp (ex: +22871529865)"
+                  placeholder="WhatsApp (ex: +22871529865) *"
                   value={whatsapp}
                   onChange={(e) => handleWhatsappChange(e.target.value)} />
                 {whatsappError && <div className={errorClass}>⚠️ {whatsappError}</div>}
@@ -239,7 +258,11 @@ export default function SoumettreePage() {
                 )}
               </div>
 
-              <ImageUploader folder="events" value={image} onChange={setImage} />
+              <div>
+                <MultiImageUploader folder="events" values={images}
+                  onChange={(urls) => { setImages(urls); setImageError(""); }} />
+                {imageError && <div className={errorClass}>⚠️ {imageError}</div>}
+              </div>
             </>
           )}
 
@@ -247,7 +270,7 @@ export default function SoumettreePage() {
             placeholder="Description (optionnel)" rows={3}
             value={description} onChange={(e) => setDescription(e.target.value)} />
 
-          <button onClick={send} disabled={loading || !!whatsappError || !!submitterPhoneError}
+          <button onClick={send} disabled={loading || !!whatsappError || !!submitterPhoneError || !!locationError || !!imageError}
             className="w-full bg-white text-black font-semibold py-3 rounded-2xl disabled:opacity-50 mt-2 transition">
             {loading ? "Envoi en cours..." : "📤 Soumettre"}
           </button>
