@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import MultiImageUploader from "../components/MultiImageUploader";
+import MultiImageUploader from "../../components/MultiImageUploader";
 
 function clean(v: string) {
   const s = (v ?? "").trim();

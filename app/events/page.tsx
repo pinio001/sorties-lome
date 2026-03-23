@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
-import BingoBackground from "../../components/BingoBackground";
+import BingoBackground from "../components/BingoBackground";
 
 type EventItem = {
   id: string;

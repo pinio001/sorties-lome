@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import MultiImageUploader from "../components/MultiImageUploader";
+import MultiImageUploader from "../../components/MultiImageUploader";
 
 const inputClass = "w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white placeholder-white/30 text-sm outline-none focus:border-white/30 transition";
 
