@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import BingoBackground from "../components/BingoBackground";
+import ImageUploader from "../components/ImageUploader";
 
 type FormType = "place" | "event";
 
@@ -205,9 +206,7 @@ export default function SoumettreePage() {
               <input className={inputClass}
                 placeholder="Instagram (optionnel)"
                 value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} />
-              <input className={inputClass}
-                placeholder="URL photo/image (optionnel)"
-                value={image} onChange={(e) => setImage(e.target.value)} />
+              <ImageUploader folder="places" value={image} onChange={setImage} />
             </>
           ) : (
             <>
@@ -240,9 +239,7 @@ export default function SoumettreePage() {
                 )}
               </div>
 
-              <input className={inputClass}
-                placeholder="URL photo/image (optionnel)"
-                value={image} onChange={(e) => setImage(e.target.value)} />
+              <ImageUploader folder="events" value={image} onChange={setImage} />
             </>
           )}
 
