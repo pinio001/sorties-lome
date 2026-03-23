@@ -7,6 +7,16 @@ type FormType = "place" | "event";
 
 const CATEGORIES = ["Bar/Resto", "Loisirs", "Night Clubs", "Hôtels"];
 
+// Capitalise la 1ère lettre de chaque mot
+function capitalizeFirst(val: string) {
+  return val.charAt(0).toUpperCase() + val.slice(1);
+}
+
+// Valide +228XXXXXXXX (8 chiffres après +228)
+function isValidPhone(val: string) {
+  return val === "" || /^\+228\d{8}$/.test(val);
+}
+
 export default function SoumettreePage() {
   const router = useRouter();
   const [type, setType] = useState<FormType>("place");
@@ -32,9 +42,30 @@ export default function SoumettreePage() {
   const [eventDate, setEventDate] = useState("");
   const [eventTime, setEventTime] = useState("");
 
+  // Erreurs téléphone
+  const [whatsappError, setWhatsappError] = useState("");
+  const [submitterPhoneError, setSubmitterPhoneError] = useState("");
+
+  const handleWhatsappChange = (val: string) => {
+    setWhatsapp(val);
+    if (val && !isValidPhone(val))
+      setWhatsappError("Format requis : +228XXXXXXXX (ex: +22871529865)");
+    else setWhatsappError("");
+  };
+
+  const handleSubmitterPhoneChange = (val: string) => {
+    setSubmitterPhone(val);
+    if (val && !isValidPhone(val))
+      setSubmitterPhoneError("Format requis : +228XXXXXXXX (ex: +22871529865)");
+    else setSubmitterPhoneError("");
+  };
+
   const send = async () => {
-    if (type === "place" && !name.trim()) return alert("Le nom est requis");
+    if (type === "place" && !name.trim()) return alert("Le nom du lieu est requis");
     if (type === "event" && !title.trim()) return alert("Le titre est requis");
+    if (whatsappError || submitterPhoneError) return alert("Corrigez les erreurs de format de téléphone");
+    if (whatsapp && !isValidPhone(whatsapp)) return alert("Format WhatsApp invalide : +228XXXXXXXX");
+
     setLoading(true);
     try {
       const res = await fetch("/api/soumettre", {
@@ -58,6 +89,9 @@ export default function SoumettreePage() {
       setLoading(false);
     }
   };
+
+  const inputClass = "w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white placeholder-white/30 text-sm outline-none focus:border-white/30 transition";
+  const errorClass = "text-xs text-red-400 mt-1 ml-1";
 
   if (success) return (
     <main className="min-h-screen">
@@ -114,10 +148,19 @@ export default function SoumettreePage() {
 
           {/* Infos soumetteur */}
           <div className="text-xs text-white/40 uppercase tracking-widest mb-1">Vos coordonnées</div>
-          <input className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white placeholder-white/30 text-sm"
-            placeholder="Votre nom (optionnel)" value={submitterName} onChange={(e) => setSubmitterName(e.target.value)} />
-          <input className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white placeholder-white/30 text-sm"
-            placeholder="Votre téléphone (optionnel)" value={submitterPhone} onChange={(e) => setSubmitterPhone(e.target.value)} />
+
+          <input className={inputClass}
+            placeholder="Votre nom (optionnel)"
+            value={submitterName}
+            onChange={(e) => setSubmitterName(e.target.value.toUpperCase())} />
+
+          <div>
+            <input className={`${inputClass} ${submitterPhoneError ? "border-red-500/50" : ""}`}
+              placeholder="Votre téléphone (ex: +22871529865)"
+              value={submitterPhone}
+              onChange={(e) => handleSubmitterPhoneChange(e.target.value)} />
+            {submitterPhoneError && <div className={errorClass}>⚠️ {submitterPhoneError}</div>}
+          </div>
 
           <div className="border-t border-white/10 pt-3">
             <div className="text-xs text-white/40 uppercase tracking-widest mb-3">
@@ -127,46 +170,88 @@ export default function SoumettreePage() {
 
           {type === "place" ? (
             <>
-              <input className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white placeholder-white/30 text-sm"
-                placeholder="Nom du lieu *" value={name} onChange={(e) => setName(e.target.value)} />
-              <select className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-sm"
+              {/* Nom en MAJUSCULES */}
+              <input className={inputClass}
+                placeholder="NOM DU LIEU *"
+                value={name}
+                onChange={(e) => setName(e.target.value.toUpperCase())} />
+
+              <select className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-sm outline-none focus:border-white/30 transition"
                 value={category} onChange={(e) => setCategory(e.target.value)}>
                 {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
-              <input className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white placeholder-white/30 text-sm"
-                placeholder="Quartier / Zone (ex: Kégué, Tokoin...)" value={location} onChange={(e) => setLocation(e.target.value)} />
-              <input className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white placeholder-white/30 text-sm"
-                placeholder="WhatsApp / Téléphone" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
-              <input className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white placeholder-white/30 text-sm"
-                placeholder="Lien Google Maps (optionnel)" value={mapsUrl} onChange={(e) => setMapsUrl(e.target.value)} />
-              <input className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white placeholder-white/30 text-sm"
-                placeholder="Instagram (optionnel)" value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} />
-              <input className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white placeholder-white/30 text-sm"
-                placeholder="URL photo/image (optionnel)" value={image} onChange={(e) => setImage(e.target.value)} />
+
+              {/* Quartier — 1ère lettre majuscule */}
+              <input className={inputClass}
+                placeholder="Quartier / Zone (ex: Kégué, Tokoin...)"
+                value={location}
+                onChange={(e) => setLocation(capitalizeFirst(e.target.value))} />
+
+              {/* WhatsApp avec validation */}
+              <div>
+                <input className={`${inputClass} ${whatsappError ? "border-red-500/50" : ""}`}
+                  placeholder="WhatsApp (ex: +22871529865)"
+                  value={whatsapp}
+                  onChange={(e) => handleWhatsappChange(e.target.value)} />
+                {whatsappError && <div className={errorClass}>⚠️ {whatsappError}</div>}
+                {!whatsappError && !whatsapp && (
+                  <div className="text-xs text-white/25 mt-1 ml-1">Format : +228XXXXXXXX</div>
+                )}
+              </div>
+
+              <input className={inputClass}
+                placeholder="Lien Google Maps (optionnel)"
+                value={mapsUrl} onChange={(e) => setMapsUrl(e.target.value)} />
+              <input className={inputClass}
+                placeholder="Instagram (optionnel)"
+                value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} />
+              <input className={inputClass}
+                placeholder="URL photo/image (optionnel)"
+                value={image} onChange={(e) => setImage(e.target.value)} />
             </>
           ) : (
             <>
-              <input className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white placeholder-white/30 text-sm"
-                placeholder="Titre de l'événement *" value={title} onChange={(e) => setTitle(e.target.value)} />
-              <input type="date" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-sm"
+              {/* Titre event en MAJUSCULES */}
+              <input className={inputClass}
+                placeholder="TITRE DE L'ÉVÉNEMENT *"
+                value={title}
+                onChange={(e) => setTitle(e.target.value.toUpperCase())} />
+
+              <input type="date" className={inputClass}
                 value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
-              <input type="time" className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-sm"
+              <input type="time" className={inputClass}
                 value={eventTime} onChange={(e) => setEventTime(e.target.value)} />
-              <input className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white placeholder-white/30 text-sm"
-                placeholder="Lieu (ex: Playce Rooftop, Lomé)" value={location} onChange={(e) => setLocation(e.target.value)} />
-              <input className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white placeholder-white/30 text-sm"
-                placeholder="WhatsApp / Téléphone" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
-              <input className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white placeholder-white/30 text-sm"
-                placeholder="URL photo/image (optionnel)" value={image} onChange={(e) => setImage(e.target.value)} />
+
+              {/* Lieu event — 1ère lettre majuscule */}
+              <input className={inputClass}
+                placeholder="Lieu (ex: Playce Rooftop, Lomé)"
+                value={location}
+                onChange={(e) => setLocation(capitalizeFirst(e.target.value))} />
+
+              {/* WhatsApp event avec validation */}
+              <div>
+                <input className={`${inputClass} ${whatsappError ? "border-red-500/50" : ""}`}
+                  placeholder="WhatsApp (ex: +22871529865)"
+                  value={whatsapp}
+                  onChange={(e) => handleWhatsappChange(e.target.value)} />
+                {whatsappError && <div className={errorClass}>⚠️ {whatsappError}</div>}
+                {!whatsappError && !whatsapp && (
+                  <div className="text-xs text-white/25 mt-1 ml-1">Format : +228XXXXXXXX</div>
+                )}
+              </div>
+
+              <input className={inputClass}
+                placeholder="URL photo/image (optionnel)"
+                value={image} onChange={(e) => setImage(e.target.value)} />
             </>
           )}
 
-          <textarea className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white placeholder-white/30 text-sm"
+          <textarea className={`${inputClass} resize-none`}
             placeholder="Description (optionnel)" rows={3}
             value={description} onChange={(e) => setDescription(e.target.value)} />
 
-          <button onClick={send} disabled={loading}
-            className="w-full bg-white text-black font-semibold py-3 rounded-2xl disabled:opacity-50 mt-2">
+          <button onClick={send} disabled={loading || !!whatsappError || !!submitterPhoneError}
+            className="w-full bg-white text-black font-semibold py-3 rounded-2xl disabled:opacity-50 mt-2 transition">
             {loading ? "Envoi en cours..." : "📤 Soumettre"}
           </button>
         </div>
