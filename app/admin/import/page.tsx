@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import BingoBackground from "../../components/BingoBackground";
+import ImageUploader from "../../components/ImageUploader";
 import * as XLSX from "xlsx";
 
 type ImportType = "place" | "event";
@@ -284,7 +285,7 @@ export default function ImportPage() {
                 <div><span className="text-white/40 uppercase tracking-widest text-[10px]">Optionnelles</span>
                   <div className="mt-1 font-mono">location · whatsapp · description · maps_url · instagram_url · tiktok_url · website_url · is_featured</div></div>
                 <div><span className="text-white/40 uppercase tracking-widest text-[10px]">Auto (script Python)</span>
-                  <div className="mt-1 font-mono text-green-400/80">media — URLs séparées par |, max 4</div></div>
+                  <div className="mt-1 font-mono text-green-400/80">media — URLs séparées par | ou upload direct sur chaque ligne</div></div>
               </>
             ) : (
               <>
@@ -293,7 +294,7 @@ export default function ImportPage() {
                 <div><span className="text-white/40 uppercase tracking-widest text-[10px]">Optionnelles</span>
                   <div className="mt-1 font-mono">event_date · event_time · location · whatsapp · description · is_featured</div></div>
                 <div><span className="text-white/40 uppercase tracking-widest text-[10px]">Auto (script Python)</span>
-                  <div className="mt-1 font-mono text-green-400/80">image — 1 seule URL</div></div>
+                  <div className="mt-1 font-mono text-green-400/80">image — 1 seule URL ou upload direct sur chaque ligne</div></div>
                 <div><span className="text-white/50">event_date :</span> <span className="font-mono">JJ/MM/AAAA</span> converti automatiquement</div>
               </>
             )}
@@ -341,14 +342,35 @@ export default function ImportPage() {
                     borderColor: r._status === "ok" ? "rgba(34,197,94,.3)" : r._status === "error" ? "rgba(239,68,68,.3)" : "rgba(255,255,255,.1)",
                     background:  r._status === "ok" ? "rgba(34,197,94,.05)" : r._status === "error" ? "rgba(239,68,68,.05)" : "rgba(255,255,255,.03)",
                   }}>
-                  <div className="min-w-0">
-                    <span className="text-white font-medium">
-                      {r.name?.trim() || r.title?.trim() || "—"}
-                    </span>
-                    {r.category && <span className="text-white/40 ml-2 text-xs">{r.category}</span>}
-                    {r.location && <span className="text-white/40 ml-2 text-xs">{r.location}</span>}
-                    {(r.media || r.image) && (
-                      <span className="text-green-400/60 ml-2 text-xs">🖼️ image</span>
+                  <div className="min-w-0 w-full">
+                    <div className="flex items-center flex-wrap gap-1 mb-1">
+                      <span className="text-white font-medium">
+                        {r.name?.trim() || r.title?.trim() || "—"}
+                      </span>
+                      {r.category && <span className="text-white/40 ml-2 text-xs">{r.category}</span>}
+                      {r.location && <span className="text-white/40 ml-2 text-xs">{r.location}</span>}
+                      {(r.media || r.image) && (
+                        <span className="text-green-400/60 ml-2 text-xs">🖼️ image</span>
+                      )}
+                    </div>
+                    {/* Upload inline si pas d'image */}
+                    {!(r.media || r.image) && r._status !== "ok" && (
+                      <div className="mt-1">
+                        <ImageUploader
+                          folder={importType === "place" ? "places" : "events"}
+                          value={""}
+                          onChange={(url) => {
+                            setRows((prev) => prev.map((row, idx) =>
+                              idx === i
+                                ? importType === "place"
+                                  ? { ...row, media: url }
+                                  : { ...row, image: url }
+                                : row
+                            ));
+                          }}
+                          label="Ajouter une image"
+                        />
+                      </div>
                     )}
                   </div>
                   <div className="text-xs shrink-0">
