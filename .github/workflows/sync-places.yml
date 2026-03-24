@@ -1,0 +1,44 @@
+# .github/workflows/sync-places.yml
+# Synchronise les horaires, budgets et menus chaque semaine
+# Exécution : tous les lundis à 03:00 UTC (= 04:00 heure Lomé)
+
+name: Sync Places Data
+
+on:
+  schedule:
+    - cron: "0 3 * * 1"   # Chaque lundi à 03h00 UTC
+  workflow_dispatch:        # Permet de lancer manuellement depuis GitHub
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4 supabase python-dotenv
+
+      - name: Run sync script
+        env:
+          GOOGLE_PLACES_API_KEY:      ${{ secrets.GOOGLE_PLACES_API_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL:   ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY:  ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          python sync_places.py --category "Bar/Resto"
+
+      - name: Sync Night Clubs
+        env:
+          GOOGLE_PLACES_API_KEY:      ${{ secrets.GOOGLE_PLACES_API_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL:   ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY:  ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          python sync_places.py --category "Night Clubs"
