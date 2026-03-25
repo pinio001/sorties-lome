@@ -18,6 +18,9 @@ type PlaceItem = {
   is_featured: boolean | null;
   featured_rank: number | null;
   interest_count: number | null;
+  opening_hours?: Record<string, {open:string; close:string} | null> | null;
+  budget_range?: string | null;
+  google_rating?: number | null;
 };
 
 const ACCENT  = "#FFFFFF";
@@ -52,6 +55,30 @@ function normalizePhoneToWa(phone: string) {
 
 function norm(s: string) { return (s ?? "").trim().toLowerCase(); }
 
+// Vérifie si un lieu est ouvert maintenant
+function isOpenNow(hours?: Record<string, {open:string; close:string} | null> | null): boolean | null {
+  if (!hours) return null;
+  // Lomé = UTC+0 toute l'année (pas de changement d'heure)
+  const nowUtc  = new Date();
+  const lomeMin = nowUtc.getUTCHours() * 60 + nowUtc.getUTCMinutes();
+  const lomeDay = nowUtc.getUTCDay(); // 0=dim
+  const days    = ["dim","lun","mar","mer","jeu","ven","sam"];
+  const dayKey  = days[lomeDay];
+  const slot    = hours[dayKey];
+  if (!slot) return false;
+  const [oh, om] = slot.open.split(":").map(Number);
+  const [ch, cm] = slot.close.split(":").map(Number);
+  const openMin  = oh * 60 + om;
+  let   closeMin = ch * 60 + cm;
+  if (closeMin < openMin) closeMin += 1440; // fermeture après minuit
+  return lomeMin >= openMin && lomeMin < closeMin;
+}
+
+function budgetLabel(b?: string | null) {
+  const map: Record<string, string> = { "€":"< 5 000 F", "€€":"5–15 000 F", "€€€":"> 15 000 F" };
+  return b ? map[b] ?? b : null;
+}
+
 function getTabConfig(key: TabKey) {
   return TABS.find((t) => t.key === key) ?? TABS[0];
 }
@@ -62,6 +89,7 @@ export default function PlacesPage() {
   const [tab, setTab]         = useState<TabKey>("bar_resto");
   const [q, setQ]             = useState("");
   const [loc, setLoc]         = useState("TOUS");
+  const [budget, setBudget]   = useState<string>("TOUS");
   const [visible, setVisible] = useState(true);
   const scrollTarget          = useRef<number | null>(null);
   const router = useRouter();
@@ -111,9 +139,10 @@ export default function PlacesPage() {
   }, [places]);
 
   const matchesFilter = (p: PlaceItem) => {
-    const okQ   = q ? norm(p.name).includes(norm(q)) : true;
-    const okLoc = loc === "TOUS" ? true : norm(p.location ?? "") === norm(loc);
-    return okQ && okLoc;
+    const okQ      = q ? norm(p.name).includes(norm(q)) : true;
+    const okLoc    = loc === "TOUS" ? true : norm(p.location ?? "") === norm(loc);
+    const okBudget = budget === "TOUS" ? true : p.budget_range === budget;
+    return okQ && okLoc && okBudget;
   };
 
   const featuredForTab = useMemo(() => {
@@ -121,13 +150,13 @@ export default function PlacesPage() {
     return places
       .filter((p) => normalizeCategory(p.category) === tab && p.is_featured && matchesFilter(p))
       .sort((a, b) => (a.featured_rank ?? 0) - (b.featured_rank ?? 0));
-  }, [places, tab, q, loc]);
+  }, [places, tab, q, loc, budget]);
 
   const filtered = useMemo(() => {
     if (tab === "populaires")
       return [...places].filter(matchesFilter).sort((a, b) => (b.interest_count ?? 0) - (a.interest_count ?? 0));
     return places.filter((p) => normalizeCategory(p.category) === tab).filter(matchesFilter);
-  }, [places, tab, q, loc]);
+  }, [places, tab, q, loc, budget]);
 
   const activeTab = getTabConfig(tab);
 
@@ -283,8 +312,16 @@ export default function PlacesPage() {
                   style={{ background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.12)" }}>
                   {locationOptions.map((l) => <option key={l} value={l} style={{ background:"#0c1220" }}>{l}</option>)}
                 </select>
-                {(q || loc !== "TOUS") && (
-                  <button onClick={() => { setQ(""); setLoc("TOUS"); }}
+                <select value={budget} onChange={(e) => setBudget(e.target.value)}
+                  className="px-3 py-2.5 rounded-xl text-sm text-white"
+                  style={{ background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.12)" }}>
+                  <option value="TOUS" style={{ background:"#0c1220" }}>Tous budgets</option>
+                  <option value="€"   style={{ background:"#0c1220" }}>€ — &lt; 5 000 F</option>
+                  <option value="€€"  style={{ background:"#0c1220" }}>€€ — 5–15 000 F</option>
+                  <option value="€€€" style={{ background:"#0c1220" }}>€€€ — &gt; 15 000 F</option>
+                </select>
+                {(q || loc !== "TOUS" || budget !== "TOUS") && (
+                  <button onClick={() => { setQ(""); setLoc("TOUS"); setBudget("TOUS"); }}
                     className="px-3 py-2.5 rounded-xl text-sm text-white/60 hover:text-white transition"
                     style={{ border:"1px solid rgba(255,255,255,.12)" }}>✕</button>
                 )}
@@ -501,6 +538,21 @@ function PlaceCard({ place, activeTab, accentColor, compact, rank }:
           </div>
         )}
 
+        {/* Voyant Ouvert/Fermé */}
+        {(() => {
+          const status = isOpenNow(place.opening_hours);
+          if (status === null) return null;
+          return (
+            <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full"
+              style={{ background:"rgba(0,0,0,.65)", backdropFilter:"blur(8px)", border:`1px solid ${status ? "rgba(74,222,128,.4)" : "rgba(239,68,68,.4)"}` }}>
+              <div className="w-1.5 h-1.5 rounded-full" style={{ background: status ? "#4ade80" : "#ef4444" }} />
+              <span className="text-xs font-medium" style={{ color: status ? "#4ade80" : "#ef4444" }}>
+                {status ? "Ouvert" : "Fermé"}
+              </span>
+            </div>
+          );
+        })()}
+
         {/* Interest count */}
         {(place.interest_count ?? 0) > 0 && (
           <div className="absolute bottom-3 right-3"
@@ -516,8 +568,20 @@ function PlaceCard({ place, activeTab, accentColor, compact, rank }:
 
       {/* Content */}
       <div className="p-4">
-        <div style={{ fontSize:11, color: accentColor, letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:3 }}>
-          {place.location ?? "Lomé"}
+        <div className="flex items-center justify-between gap-1 mb-1">
+          <div style={{ fontSize:11, color: accentColor, letterSpacing:"0.08em", textTransform:"uppercase" }}>
+            {place.location ?? "Lomé"}
+          </div>
+          <div className="flex items-center gap-1.5">
+            {place.google_rating && (
+              <span style={{ fontSize:10, color:"rgba(255,255,255,.5)" }}>⭐ {place.google_rating}</span>
+            )}
+            {place.budget_range && (
+              <span style={{ fontSize:10, color:"rgba(255,255,255,.4)", background:"rgba(255,255,255,.08)", padding:"1px 5px", borderRadius:4 }}>
+                {place.budget_range}
+              </span>
+            )}
+          </div>
         </div>
         <div style={{ fontFamily:"Syne", fontWeight:700, fontSize:15, color:"#fff", lineHeight:1.3, marginBottom:6 }}
           className="line-clamp-1">

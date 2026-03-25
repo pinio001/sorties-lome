@@ -14,6 +14,18 @@ type PlaceItem = {
   description: string | null; is_featured: boolean | null; featured_rank: number | null;
   interest_count: number | null; maps_url?: string | null; website_url?: string | null;
   instagram_url?: string | null; tiktok_url?: string | null;
+  opening_hours?: Record<string, {open:string; close:string} | null> | null;
+  budget_range?: string | null;
+  google_rating?: number | null;
+};
+
+type MenuItem = {
+  id: string;
+  category: string | null;
+  item_name: string;
+  price: number | null;
+  currency: string;
+  available: boolean;
 };
 
 function normalizePhoneToWa(phone: string) {
@@ -37,6 +49,27 @@ function getOrCreateDeviceId() {
 function cleanUrl(u?: string | null) {
   const s = (u ?? "").trim(); if (!s) return null;
   return /^https?:\/\//i.test(s) ? s : `https://${s}`;
+}
+
+function isOpenNow(hours?: Record<string, {open:string; close:string} | null> | null): boolean | null {
+  if (!hours) return null;
+  // Lomé = UTC+0 toute l'année
+  const nowUtc  = new Date();
+  const lomeMin = nowUtc.getUTCHours() * 60 + nowUtc.getUTCMinutes();
+  const days    = ["dim","lun","mar","mer","jeu","ven","sam"];
+  const slot    = hours[days[nowUtc.getUTCDay()]];
+  if (!slot) return false;
+  const [oh,om] = slot.open.split(":").map(Number);
+  const [ch,cm] = slot.close.split(":").map(Number);
+  const openMin = oh*60+om;
+  let closeMin  = ch*60+cm;
+  if (closeMin < openMin) closeMin += 1440;
+  return lomeMin >= openMin && lomeMin < closeMin;
+}
+
+function budgetLabel(b?: string | null) {
+  const map: Record<string,string> = {"F":"< 5 000 F","FF":"5–15 000 F","FFF":"> 15 000 F"};
+  return b ? map[b] ?? b : null;
 }
 
 function getUtm() {
@@ -79,8 +112,16 @@ export default function PlaceDetailPage() {
   const [errorMsg, setErrorMsg]     = useState<string | null>(null);
   const [likeLoading, setLikeLoading] = useState(false);
   const [liked, setLiked]           = useState(false);
+  const [menu, setMenu]             = useState<MenuItem[]>([]);
 
   useEffect(() => { trackPageView({ entity_type:"place", entity_id:String(placeId) }); }, [placeId]);
+
+  // Charger le menu
+  useEffect(() => {
+    if (!placeId) return;
+    supabase.from("menus").select("*").eq("place_id", placeId).eq("available", true).order("category").order("price")
+      .then(({ data }) => setMenu((data ?? []) as MenuItem[]));
+  }, [placeId]);
 
   useEffect(() => {
     if (!placeId) return;
@@ -264,10 +305,42 @@ export default function PlaceDetailPage() {
               {/* Key info card */}
               <div className="mt-5 rounded-2xl p-4 space-y-3"
                 style={{ border:"1px solid rgba(255,255,255,.1)", background:"rgba(255,255,255,.04)" }}>
+
+                {/* Voyant ouvert/fermé */}
+                {(() => {
+                  const status = isOpenNow(place.opening_hours);
+                  if (status === null) return null;
+                  return (
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full" style={{ background: status ? "#4ade80" : "#ef4444" }} />
+                      <span className="text-sm font-semibold" style={{ color: status ? "#4ade80" : "#ef4444" }}>
+                        {status ? "Ouvert maintenant" : "Fermé actuellement"}
+                      </span>
+                    </div>
+                  );
+                })()}
+
                 <div className="flex items-center gap-3 text-sm" style={{ color:"rgba(255,255,255,.75)" }}>
                   <span className="text-lg">📍</span>
                   <span>{place.location ?? "Lomé"}</span>
                 </div>
+
+                {/* Budget */}
+                {place.budget_range && (
+                  <div className="flex items-center gap-3 text-sm" style={{ color:"rgba(255,255,255,.75)" }}>
+                    <span className="text-lg">💰</span>
+                    <span>{place.budget_range} — {budgetLabel(place.budget_range)}</span>
+                  </div>
+                )}
+
+                {/* Note Google */}
+                {place.google_rating && (
+                  <div className="flex items-center gap-3 text-sm" style={{ color:"rgba(255,255,255,.75)" }}>
+                    <span className="text-lg">⭐</span>
+                    <span>{place.google_rating}/5 sur Google</span>
+                  </div>
+                )}
+
                 {(place.interest_count ?? 0) > 0 && (
                   <div className="flex items-center gap-3 text-sm" style={{ color:"rgba(255,255,255,.75)" }}>
                     <span className="text-lg">❤️</span>
@@ -303,6 +376,67 @@ export default function PlaceDetailPage() {
                       style={{ border:"1px solid rgba(255,255,255,.12)", background:"rgba(255,255,255,.04)" }}>
                       {link.icon} {link.label}
                     </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Horaires d'ouverture */}
+              {place.opening_hours && Object.values(place.opening_hours).some(Boolean) && (
+                <div className="mt-4 rounded-2xl p-4"
+                  style={{ border:"1px solid rgba(255,255,255,.08)", background:"rgba(255,255,255,.03)" }}>
+                  <div style={{ fontFamily:"Syne", fontWeight:700, fontSize:13, color:"rgba(255,255,255,.5)", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:10 }}>
+                    🕐 Horaires
+                  </div>
+                  <div className="space-y-1.5">
+                    {["lun","mar","mer","jeu","ven","sam","dim"].map((day) => {
+                      const slot = place.opening_hours?.[day];
+                      const labels: Record<string,string> = {lun:"Lundi",mar:"Mardi",mer:"Mercredi",jeu:"Jeudi",ven:"Vendredi",sam:"Samedi",dim:"Dimanche"};
+                      const isToday = ["dim","lun","mar","mer","jeu","ven","sam"][new Date().getUTCDay()] === day;
+                      return (
+                        <div key={day} className="flex items-center justify-between text-sm"
+                          style={{ color: isToday ? "#fff" : "rgba(255,255,255,.5)", fontWeight: isToday ? 600 : 400 }}>
+                          <span>{labels[day]}{isToday ? " (aujourd'hui)" : ""}</span>
+                          <span style={{ color: slot ? (isToday ? "#4ade80" : "rgba(255,255,255,.6)") : "rgba(239,68,68,.7)" }}>
+                            {slot ? `${slot.open} – ${slot.close}` : "Fermé"}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Menu */}
+              {menu.length > 0 && (
+                <div className="mt-4 rounded-2xl p-4"
+                  style={{ border:"1px solid rgba(255,255,255,.08)", background:"rgba(255,255,255,.03)" }}>
+                  <div style={{ fontFamily:"Syne", fontWeight:700, fontSize:13, color:"rgba(255,255,255,.5)", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:10 }}>
+                    🍽️ Menu
+                  </div>
+                  {Object.entries(
+                    menu.reduce((acc, item) => {
+                      const cat = item.category ?? "Autres";
+                      if (!acc[cat]) acc[cat] = [];
+                      acc[cat].push(item);
+                      return acc;
+                    }, {} as Record<string, MenuItem[]>)
+                  ).map(([cat, items]) => (
+                    <div key={cat} className="mb-4 last:mb-0">
+                      <div style={{ fontSize:11, color:"rgba(255,255,255,.35)", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:6 }}>{cat}</div>
+                      <div className="space-y-1.5">
+                        {items.map((item) => (
+                          <div key={item.id} className="flex items-center justify-between text-sm"
+                            style={{ color:"rgba(255,255,255,.75)" }}>
+                            <span>{item.item_name}</span>
+                            {item.price && (
+                              <span style={{ color:"rgba(255,255,255,.5)", whiteSpace:"nowrap", marginLeft:8 }}>
+                                {item.price.toLocaleString("fr-FR")} {item.currency}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}
