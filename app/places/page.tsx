@@ -315,7 +315,7 @@ export default function PlacesPage() {
                 <select value={budget} onChange={(e) => setBudget(e.target.value)}
                   className="px-3 py-2.5 rounded-xl text-sm text-white"
                   style={{ background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.12)" }}>
-                  <option value="TOUS" style={{ background:"#0c1220" }}>Budget min</option>
+                  <option value="Lieu" style={{ background:"#0c1220" }}>Budget min</option>
                   <option value="€"   style={{ background:"#0c1220" }}>€ — &lt; 5 000 F</option>
                   <option value="€€"  style={{ background:"#0c1220" }}>€€ — 5–15 000 F</option>
                   <option value="€€€" style={{ background:"#0c1220" }}>€€€ — &gt; 15 000 F</option>
