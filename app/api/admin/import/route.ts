@@ -38,8 +38,3 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true }, { headers: CORS });
 }
-```
-
-Et dans ton `.env.local` + Vercel :
-```
-IMPORT_SECRET_KEY=genere-une-cle-aleatoire-longue
