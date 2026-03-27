@@ -137,7 +137,7 @@ export default function PlacesPage() {
   const locationOptions = useMemo(() => {
     const set = new Set<string>();
     for (const p of places) { const l = (p.location ?? "").trim(); if (l) set.add(l); }
-    return ["TOUS", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
+    return ["Filtre par lieu", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
   }, [places]);
 
   const matchesFilter = (p: PlaceItem) => {
@@ -317,7 +317,7 @@ export default function PlacesPage() {
                 <select value={budget} onChange={(e) => setBudget(e.target.value)}
                   className="px-3 py-2.5 rounded-xl text-sm text-white"
                   style={{ background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.12)" }}>
-                  <option value="TOUS" style={{ background:"#0c1220" }}>Tous budgets</option>
+                  <option value="TOUS" style={{ background:"#0c1220" }}>Filtre par budget </option>
                   <option value="€"   style={{ background:"#0c1220" }}>€ — &lt; 5 000 F</option>
                   <option value="€€"  style={{ background:"#0c1220" }}>€€ — 5–15 000 F</option>
                   <option value="€€€" style={{ background:"#0c1220" }}>€€€ — &gt; 15 000 F</option>
