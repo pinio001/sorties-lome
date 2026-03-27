@@ -14,7 +14,7 @@ type PlaceItem = {
   description: string | null; is_featured: boolean | null; featured_rank: number | null;
   interest_count: number | null; maps_url?: string | null; website_url?: string | null;
   instagram_url?: string | null; tiktok_url?: string | null;
-  opening_hours?: Record<string, {open:string; close:string} | null> | null;
+  opening_hours?: Record<string, {open:string; close:string} | {open:string; close:string}[] | null> | null;
   budget_range?: string | null;
   google_rating?: number | null;
 };
@@ -51,7 +51,7 @@ function cleanUrl(u?: string | null) {
   return /^https?:\/\//i.test(s) ? s : `https://${s}`;
 }
 
-function isOpenNow(hours?: Record<string, {open:string; close:string} | null> | null): boolean | null {
+function isOpenNow(hours?: Record<string, {open:string; close:string} | {open:string; close:string}[] | null> | null): boolean | null {
   if (!hours) return null;
   // Lomé = UTC+0 toute l'année
   const nowUtc  = new Date();
@@ -59,16 +59,26 @@ function isOpenNow(hours?: Record<string, {open:string; close:string} | null> | 
   const days    = ["dim","lun","mar","mer","jeu","ven","sam"];
   const slot    = hours[days[nowUtc.getUTCDay()]];
   if (!slot) return false;
-  const [oh,om] = slot.open.split(":").map(Number);
-  const [ch,cm] = slot.close.split(":").map(Number);
-  const openMin = oh*60+om;
-  let closeMin  = ch*60+cm;
-  if (closeMin < openMin) closeMin += 1440;
-  return lomeMin >= openMin && lomeMin < closeMin;
+  const slots = Array.isArray(slot) ? slot : [slot];
+  for (const s of slots) {
+    const [oh, om] = s.open.split(":").map(Number);
+    const [ch, cm] = s.close.split(":").map(Number);
+    const openMin  = oh * 60 + om;
+    let   closeMin = ch * 60 + cm;
+    if (closeMin <= openMin) closeMin += 1440;
+    if (lomeMin >= openMin && lomeMin < closeMin) return true;
+  }
+  return false;
+}
+
+function formatSlots(slot: {open:string; close:string} | {open:string; close:string}[] | null | undefined): string {
+  if (!slot) return "Fermé";
+  const slots = Array.isArray(slot) ? slot : [slot];
+  return slots.map(s => `${s.open} – ${s.close}`).join("  •  ");
 }
 
 function budgetLabel(b?: string | null) {
-  const map: Record<string,string> = {"F":"< 5 000 F","FF":"5–15 000 F","FFF":"> 15 000 F"};
+  const map: Record<string,string> = {"€":"< 5 000 F","€€":"5–15 000 F","€€€":"> 15 000 F"};
   return b ? map[b] ?? b : null;
 }
 
@@ -393,11 +403,11 @@ export default function PlaceDetailPage() {
                       const labels: Record<string,string> = {lun:"Lundi",mar:"Mardi",mer:"Mercredi",jeu:"Jeudi",ven:"Vendredi",sam:"Samedi",dim:"Dimanche"};
                       const isToday = ["dim","lun","mar","mer","jeu","ven","sam"][new Date().getUTCDay()] === day;
                       return (
-                        <div key={day} className="flex items-center justify-between text-sm"
+                        <div key={day} className="flex items-center justify-between text-sm gap-3"
                           style={{ color: isToday ? "#fff" : "rgba(255,255,255,.5)", fontWeight: isToday ? 600 : 400 }}>
-                          <span>{labels[day]}{isToday ? " (aujourd'hui)" : ""}</span>
-                          <span style={{ color: slot ? (isToday ? "#4ade80" : "rgba(255,255,255,.6)") : "rgba(239,68,68,.7)" }}>
-                            {slot ? `${slot.open} – ${slot.close}` : "Fermé"}
+                          <span className="shrink-0">{labels[day]}{isToday ? " (aujourd'hui)" : ""}</span>
+                          <span className="text-right" style={{ color: slot ? (isToday ? "#4ade80" : "rgba(255,255,255,.6)") : "rgba(239,68,68,.7)" }}>
+                            {formatSlots(slot)}
                           </span>
                         </div>
                       );

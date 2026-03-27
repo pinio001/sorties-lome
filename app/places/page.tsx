@@ -18,7 +18,7 @@ type PlaceItem = {
   is_featured: boolean | null;
   featured_rank: number | null;
   interest_count: number | null;
-  opening_hours?: Record<string, {open:string; close:string} | null> | null;
+  opening_hours?: Record<string, {open:string; close:string} | {open:string; close:string}[] | null> | null;
   budget_range?: string | null;
   google_rating?: number | null;
 };
@@ -56,22 +56,24 @@ function normalizePhoneToWa(phone: string) {
 function norm(s: string) { return (s ?? "").trim().toLowerCase(); }
 
 // Vérifie si un lieu est ouvert maintenant
-function isOpenNow(hours?: Record<string, {open:string; close:string} | null> | null): boolean | null {
+function isOpenNow(hours?: Record<string, {open:string; close:string} | {open:string; close:string}[] | null> | null): boolean | null {
   if (!hours) return null;
-  // Lomé = UTC+0 toute l'année (pas de changement d'heure)
+  // Lomé = UTC+0 toute l'année
   const nowUtc  = new Date();
   const lomeMin = nowUtc.getUTCHours() * 60 + nowUtc.getUTCMinutes();
-  const lomeDay = nowUtc.getUTCDay(); // 0=dim
   const days    = ["dim","lun","mar","mer","jeu","ven","sam"];
-  const dayKey  = days[lomeDay];
-  const slot    = hours[dayKey];
+  const slot    = hours[days[nowUtc.getUTCDay()]];
   if (!slot) return false;
-  const [oh, om] = slot.open.split(":").map(Number);
-  const [ch, cm] = slot.close.split(":").map(Number);
-  const openMin  = oh * 60 + om;
-  let   closeMin = ch * 60 + cm;
-  if (closeMin < openMin) closeMin += 1440; // fermeture après minuit
-  return lomeMin >= openMin && lomeMin < closeMin;
+  const slots = Array.isArray(slot) ? slot : [slot];
+  for (const s of slots) {
+    const [oh, om] = s.open.split(":").map(Number);
+    const [ch, cm] = s.close.split(":").map(Number);
+    const openMin  = oh * 60 + om;
+    let   closeMin = ch * 60 + cm;
+    if (closeMin <= openMin) closeMin += 1440;
+    if (lomeMin >= openMin && lomeMin < closeMin) return true;
+  }
+  return false;
 }
 
 function budgetLabel(b?: string | null) {
@@ -135,7 +137,7 @@ export default function PlacesPage() {
   const locationOptions = useMemo(() => {
     const set = new Set<string>();
     for (const p of places) { const l = (p.location ?? "").trim(); if (l) set.add(l); }
-    return ["LIEU", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
+    return ["TOUS", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
   }, [places]);
 
   const matchesFilter = (p: PlaceItem) => {
@@ -315,7 +317,7 @@ export default function PlacesPage() {
                 <select value={budget} onChange={(e) => setBudget(e.target.value)}
                   className="px-3 py-2.5 rounded-xl text-sm text-white"
                   style={{ background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.12)" }}>
-                  <option value="TOUS" style={{ background:"#0c1220" }}>BUDGET MIN</option>
+                  <option value="TOUS" style={{ background:"#0c1220" }}>Tous budgets</option>
                   <option value="€"   style={{ background:"#0c1220" }}>€ — &lt; 5 000 F</option>
                   <option value="€€"  style={{ background:"#0c1220" }}>€€ — 5–15 000 F</option>
                   <option value="€€€" style={{ background:"#0c1220" }}>€€€ — &gt; 15 000 F</option>
