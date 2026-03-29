@@ -7,6 +7,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import BingoBackground from "../../components/BingoBackground";
 import MediaCarousel from "../../components/MediaCaroussel";
 import { trackPageView } from "../../../lib/trackViewClient";
+import ReviewsSection from "../../components/ReviewsSection";
 
 type PlaceItem = {
   id: string; name: string | null; category: string | null; location: string | null;
@@ -16,7 +17,6 @@ type PlaceItem = {
   instagram_url?: string | null; tiktok_url?: string | null;
   opening_hours?: Record<string, {open:string; close:string} | {open:string; close:string}[] | null> | null;
   budget_range?: string | null;
-  google_rating?: number | null;
 };
 
 type MenuItem = {
@@ -343,14 +343,6 @@ export default function PlaceDetailPage() {
                   </div>
                 )}
 
-                {/* Note Google */}
-                {place.google_rating && (
-                  <div className="flex items-center gap-3 text-sm" style={{ color:"rgba(255,255,255,.75)" }}>
-                    <span className="text-lg">⭐</span>
-                    <span>{place.google_rating}/5 sur Google</span>
-                  </div>
-                )}
-
                 {(place.interest_count ?? 0) > 0 && (
                   <div className="flex items-center gap-3 text-sm" style={{ color:"rgba(255,255,255,.75)" }}>
                     <span className="text-lg">❤️</span>
@@ -477,6 +469,9 @@ export default function PlaceDetailPage() {
                   {liked ? "❤️ Intéressé(e)" : likeLoading ? "..." : "🤍 Je suis intéressé(e)"}
                 </button>
               </div>
+
+              {/* Avis utilisateurs */}
+              <ReviewsSection placeId={placeId ?? ""} />
             </div>
           </div>
         </div>

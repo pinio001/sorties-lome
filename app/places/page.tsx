@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import BingoBackground from "../components/BingoBackground";
+import HeroCarousel from "../components/HeroCarousel";
 import FeedbackPopup from "../components/FeedbackPopup";
 
 type PlaceItem = {
@@ -20,7 +21,6 @@ type PlaceItem = {
   interest_count: number | null;
   opening_hours?: Record<string, {open:string; close:string} | {open:string; close:string}[] | null> | null;
   budget_range?: string | null;
-  google_rating?: number | null;
 };
 
 const ACCENT  = "#FFFFFF";
@@ -124,6 +124,8 @@ export default function PlacesPage() {
 
   const handleTabChange = (t: TabKey) => {
     setTab(t);
+    // Reset filtres lieu/budget quand on quitte bar_resto
+    if (t !== "bar_resto") { setLoc("TOUS"); setBudget("TOUS"); }
     const url = new URL(window.location.href);
     url.searchParams.set("tab", t);
     window.history.replaceState(null, "", url.toString());
@@ -137,7 +139,7 @@ export default function PlacesPage() {
   const locationOptions = useMemo(() => {
     const set = new Set<string>();
     for (const p of places) { const l = (p.location ?? "").trim(); if (l) set.add(l); }
-    return ["Filtre par lieu", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
+    return ["TOUS", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
   }, [places]);
 
   const matchesFilter = (p: PlaceItem) => {
@@ -161,6 +163,11 @@ export default function PlacesPage() {
   }, [places, tab, q, loc, budget]);
 
   const activeTab = getTabConfig(tab);
+
+  // Items pour le carousel (spots avec image)
+  const carouselItems = places
+    .filter(p => p.image)
+    .map(p => ({ id: p.id, image: p.image!, name: p.name, location: p.location, type: "place" as const }));
 
   // Counts per tab
   const counts = useMemo(() => {
@@ -262,12 +269,13 @@ export default function PlacesPage() {
             <div className="flex items-center gap-1.5">
               <a href="/" className="border border-white/15 px-2.5 py-2 rounded-xl text-white/60 hover:bg-white/8 transition text-sm">🏠</a>
               <a href="/contact?source=places" className="border border-white/15 px-2.5 py-2 rounded-xl text-white/70 hover:bg-white/8 transition text-sm">
-                <span className="hidden sm:inline text-sm">✉️ Contact</span>
-                <span className="sm:hidden text-sm">✉️</span>
+✉️ Contact
               </a>
-              <a href="/events" className="border border-white/15 px-2.5 py-2 rounded-xl text-white/70 hover:bg-white/8 transition text-sm">
-                <span className="hidden sm:inline">Events →</span>
-                <span className="sm:hidden">🎉</span>
+              <a href="/events" className="border border-white/15 px-2.5 py-2 rounded-xl hover:opacity-90 transition text-sm font-semibold" style={{ background:"#fff", color:"#000" }}>
+Events →
+              </a>
+              <a href="/inscription" className="border border-white/15 px-2.5 py-2 rounded-xl text-white/70 hover:bg-white/8 transition text-sm">
+S'inscrire
               </a>
             </div>
           </div>
@@ -309,19 +317,23 @@ export default function PlacesPage() {
                     style={{ background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.12)" }}
                   />
                 </div>
-                <select value={loc} onChange={(e) => setLoc(e.target.value)}
-                  className="px-3 py-2.5 rounded-xl text-sm text-white"
-                  style={{ background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.12)" }}>
-                  {locationOptions.map((l) => <option key={l} value={l} style={{ background:"#0c1220" }}>{l}</option>)}
-                </select>
-                <select value={budget} onChange={(e) => setBudget(e.target.value)}
-                  className="px-3 py-2.5 rounded-xl text-sm text-white"
-                  style={{ background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.12)" }}>
-                  <option value="TOUS" style={{ background:"#0c1220" }}>Filtre par budget </option>
-                  <option value="€"   style={{ background:"#0c1220" }}>€ — &lt; 5 000 F</option>
-                  <option value="€€"  style={{ background:"#0c1220" }}>€€ — 5–15 000 F</option>
-                  <option value="€€€" style={{ background:"#0c1220" }}>€€€ — &gt; 15 000 F</option>
-                </select>
+                {tab === "bar_resto" && (
+                  <>
+                    <select value={loc} onChange={(e) => setLoc(e.target.value)}
+                      className="px-3 py-2.5 rounded-xl text-sm text-white"
+                      style={{ background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.12)" }}>
+                      {locationOptions.map((l) => <option key={l} value={l} style={{ background:"#0c1220" }}>{l === "TOUS" ? "Filtre par lieu" : l}</option>)}
+                    </select>
+                    <select value={budget} onChange={(e) => setBudget(e.target.value)}
+                      className="px-3 py-2.5 rounded-xl text-sm text-white"
+                      style={{ background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.12)" }}>
+                      <option value="TOUS" style={{ background:"#0c1220" }}>Budget min</option>
+                      <option value="€"   style={{ background:"#0c1220" }}>€ — &lt; 5 000 F</option>
+                      <option value="€€"  style={{ background:"#0c1220" }}>€€ — 5–15 000 F</option>
+                      <option value="€€€" style={{ background:"#0c1220" }}>€€€ — &gt; 15 000 F</option>
+                    </select>
+                  </>
+                )}
                 {(q || loc !== "TOUS" || budget !== "TOUS") && (
                   <button onClick={() => { setQ(""); setLoc("TOUS"); setBudget("TOUS"); }}
                     className="px-3 py-2.5 rounded-xl text-sm text-white/60 hover:text-white transition"
@@ -330,6 +342,11 @@ export default function PlacesPage() {
               </div>
             </div>
           </div>
+
+          {/* ── HERO CAROUSEL ── */}
+          {!loading && carouselItems.length > 0 && (
+            <HeroCarousel items={carouselItems} />
+          )}
 
           {/* ── TABS ── */}
           <div className="anim-3 flex gap-2 flex-wrap mb-8">
@@ -574,16 +591,11 @@ function PlaceCard({ place, activeTab, accentColor, compact, rank }:
           <div style={{ fontSize:11, color: accentColor, letterSpacing:"0.08em", textTransform:"uppercase" }}>
             {place.location ?? "Lomé"}
           </div>
-          <div className="flex items-center gap-1.5">
-            {place.google_rating && (
-              <span style={{ fontSize:10, color:"rgba(255,255,255,.5)" }}>⭐ {place.google_rating}</span>
-            )}
-            {place.budget_range && (
-              <span style={{ fontSize:10, color:"rgba(255,255,255,.4)", background:"rgba(255,255,255,.08)", padding:"1px 5px", borderRadius:4 }}>
-                {place.budget_range}
-              </span>
-            )}
-          </div>
+          {place.budget_range && (
+            <span style={{ fontSize:10, color:"rgba(255,255,255,.4)", background:"rgba(255,255,255,.08)", padding:"1px 5px", borderRadius:4 }}>
+              {place.budget_range}
+            </span>
+          )}
         </div>
         <div style={{ fontFamily:"Syne", fontWeight:700, fontSize:15, color:"#fff", lineHeight:1.3, marginBottom:6 }}
           className="line-clamp-1">

@@ -1,0 +1,64 @@
+# .github/workflows/newsletter.yml
+# Envoie automatiquement les newsletters chaque lundi
+
+name: Newsletter Bingo228
+
+on:
+  schedule:
+    - cron: "0 7 * * 1"   # Lundi 07h00 UTC = 08h00 Lomé
+  workflow_dispatch:
+    inputs:
+      type:
+        description: "Type d'envoi"
+        required: true
+        default: "events"
+        type: choice
+        options: [events, spot, new-event]
+      event_id:
+        description: "ID event (pour new-event uniquement)"
+        required: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests supabase python-dotenv
+
+      # Events de la semaine (lundi automatique)
+      - name: Envoyer events de la semaine
+        if: github.event_name == 'schedule' || inputs.type == 'events'
+        env:
+          NEXT_PUBLIC_SUPABASE_URL:  ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY:            ${{ secrets.RESEND_API_KEY }}
+          SITE_URL:                  https://bingo228.com
+        run: python send_newsletter.py --type events
+
+      # Spot de la semaine (lundi automatique)
+      - name: Envoyer spot de la semaine
+        if: github.event_name == 'schedule' || inputs.type == 'spot'
+        env:
+          NEXT_PUBLIC_SUPABASE_URL:  ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY:            ${{ secrets.RESEND_API_KEY }}
+          SITE_URL:                  https://bingo228.com
+        run: python send_newsletter.py --type spot
+
+      # Nouvel event (manuel uniquement)
+      - name: Envoyer notification nouvel event
+        if: inputs.type == 'new-event' && inputs.event_id != ''
+        env:
+          NEXT_PUBLIC_SUPABASE_URL:  ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY:            ${{ secrets.RESEND_API_KEY }}
+          SITE_URL:                  https://bingo228.com
+        run: python send_newsletter.py --type new-event --event-id ${{ inputs.event_id }}

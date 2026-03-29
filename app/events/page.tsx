@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import BingoBackground from "../components/BingoBackground";
-import FeedbackPopup from "../components/FeedbackPopup";
+import HeroCarousel from "../components/HeroCarousel";
 
 type EventItem = {
   id: string;
@@ -106,6 +106,11 @@ export default function EventsPage() {
       });
     }
   }, [loading]);
+
+  const today = new Date().toISOString().slice(0, 10);
+  const carouselItems = events
+    .filter(e => e.image && (!e.event_date || e.event_date >= today))
+    .map(e => ({ id: e.id, image: e.image!, name: e.title ?? "Event", location: e.location, type: "event" as const }));
 
   const handleTabChange = (t: TabKey) => {
     setTab(t);
@@ -238,12 +243,13 @@ export default function EventsPage() {
             <div className="flex items-center gap-1.5">
               <a href="/" className="border border-white/15 px-2.5 py-2 rounded-xl text-white/60 hover:bg-white/8 transition text-sm">🏠</a>
               <a href="/contact?source=events" className="border border-white/15 px-2.5 py-2 rounded-xl text-white/70 hover:bg-white/8 transition text-sm">
-                <span className="hidden sm:inline">✉️ Contact</span>
-                <span className="sm:hidden">✉️</span>
+                ✉️ Contact
               </a>
-              <a href="/places" className="border border-white/15 px-2.5 py-2 rounded-xl text-white/70 hover:bg-white/8 transition text-sm">
-                <span className="hidden sm:inline">Places →</span>
-                <span className="sm:hidden">📍</span>
+              <a href="/places" className="border border-white/15 px-2.5 py-2 rounded-xl hover:opacity-90 transition text-sm font-semibold" style={{ background:"#fff", color:"#000" }}>
+Places →
+              </a>
+              <a href="/inscription" className="border border-white/15 px-2.5 py-2 rounded-xl text-white/70 hover:bg-white/8 transition text-sm">
+S'inscrire
               </a>
             </div>
           </div>
@@ -264,6 +270,11 @@ export default function EventsPage() {
               {filtered.length} événements · Concerts, clubs, afterworks & plus
             </p>
           </div>
+
+          {/* ── HERO CAROUSEL ── */}
+          {!loading && carouselItems.length > 0 && (
+            <HeroCarousel items={carouselItems} />
+          )}
 
           {/* TABS */}
           <div className="anim-3 flex gap-2 flex-wrap mb-8">
@@ -345,7 +356,6 @@ export default function EventsPage() {
           )}
         </div>
       </main>
-      <FeedbackPopup />
     </>
   );
 }
