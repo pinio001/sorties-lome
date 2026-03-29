@@ -10,7 +10,7 @@ type Review = {
   created_at: string;
   rating: number;
   comment: string | null;
-  bingo_users: { pseudo: string } | null;
+  bingo_users: { pseudo: string } | { pseudo: string }[] | null;
 };
 
 interface Props {
@@ -58,7 +58,7 @@ export default function ReviewsSection({ placeId }: Props) {
       .eq("place_id", placeId)
       .order("created_at", { ascending: false })
       .then(({ data }) => {
-        setReviews((data ?? []) as Review[]);
+        setReviews((data ?? []) as unknown as Review[]);
         setLoading(false);
       });
   }, [placeId, sent]);
@@ -199,10 +199,10 @@ export default function ReviewsSection({ placeId }: Props) {
                   <div style={{ width:28, height:28, borderRadius:"50%", background:"rgba(255,255,255,.1)",
                     display:"flex", alignItems:"center", justifyContent:"center",
                     fontSize:12, color:"rgba(255,255,255,.6)", fontWeight:700 }}>
-                    {r.bingo_users?.pseudo?.[0]?.toUpperCase() ?? "?"}
+                    {(Array.isArray(r.bingo_users) ? r.bingo_users[0]?.pseudo : r.bingo_users?.pseudo)?.[0]?.toUpperCase() ?? "?"}
                   </div>
                   <span style={{ fontSize:13, color:"#fff", fontWeight:600 }}>
-                    {r.bingo_users?.pseudo ?? "Anonyme"}
+                    {(Array.isArray(r.bingo_users) ? r.bingo_users[0]?.pseudo : r.bingo_users?.pseudo) ?? "Anonyme"}
                   </span>
                 </div>
                 <span style={{ fontSize:11, color:"rgba(255,255,255,.3)" }}>{fmtDate(r.created_at)}</span>
