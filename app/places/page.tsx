@@ -252,31 +252,27 @@ export default function PlacesPage() {
 
           {/* ── NAVBAR ── */}
           <div className="anim-1 flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center shadow-lg">
-                <span style={{ fontWeight:900, fontSize:18, color:"#000", fontFamily:"Syne" }}>B</span>
+            {/* Logo */}
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-lg">
+                <span style={{ fontWeight:900, fontSize:16, color:"#000", fontFamily:"Syne" }}>B</span>
               </div>
               <div>
-                <div style={{ fontFamily:"Syne", fontWeight:700, fontSize:15, color:"#fff" }}>Bingo</div>
-                <div className="flex items-center gap-1.5">
-                  <span className="live-dot w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
-                  <span style={{ fontSize:10, color:"#4ade80", letterSpacing:"0.1em", textTransform:"uppercase", fontWeight:600 }}>
+                <div style={{ fontFamily:"Syne", fontWeight:700, fontSize:13, color:"#fff", lineHeight:1.2 }}>Bingo</div>
+                <div className="flex items-center gap-1">
+                  <span className="live-dot w-1.5 h-1.5 rounded-full bg-green-400 inline-block shrink-0" />
+                  <span style={{ fontSize:9, color:"#4ade80", letterSpacing:"0.08em", textTransform:"uppercase", fontWeight:600, whiteSpace:"nowrap" }}>
                     {places.length} spots
                   </span>
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <a href="/" className="border border-white/15 px-2.5 py-2 rounded-xl text-white/60 hover:bg-white/8 transition text-sm">🏠</a>
-              <a href="/contact?source=places" className="border border-white/15 px-2.5 py-2 rounded-xl text-white/70 hover:bg-white/8 transition text-sm">
-✉️ Contact
-              </a>
-              <a href="/events" className="border border-white/15 px-2.5 py-2 rounded-xl hover:opacity-90 transition text-sm font-semibold" style={{ background:"#fff", color:"#000" }}>
-Events →
-              </a>
-              <a href="/inscription" className="border border-white/15 px-2.5 py-2 rounded-xl text-white/70 hover:bg-white/8 transition text-sm">
-S'inscrire
-              </a>
+            {/* Boutons */}
+            <div className="flex items-center gap-1">
+              <a href="/" className="border border-white/15 px-2 py-1.5 rounded-lg text-white/60 hover:bg-white/8 transition text-xs">🏠</a>
+              <a href="/contact?source=places" className="border border-white/15 px-2 py-1.5 rounded-lg text-white/70 hover:bg-white/8 transition text-xs whitespace-nowrap">✉️ Contact</a>
+              <a href="/events" className="px-2 py-1.5 rounded-lg hover:opacity-90 transition text-xs font-semibold whitespace-nowrap" style={{ background:"#fff", color:"#000" }}>Events →</a>
+              <a href="/inscription" className="border border-white/15 px-2 py-1.5 rounded-lg text-white/70 hover:bg-white/8 transition text-xs whitespace-nowrap">S'inscrire</a>
             </div>
           </div>
 
