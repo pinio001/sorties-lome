@@ -5,8 +5,10 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const STORAGE_KEY = "bingo_feedback_last";
-const DELAY_MS    = 30_000; // 30 secondes
+const STORAGE_KEY  = "bingo_feedback_data";
+const DELAY_MS     = 2 * 60 * 1000;          // 2 minutes
+const COOLDOWN_MS  = 7 * 24 * 60 * 60 * 1000; // 1 semaine
+const MAX_PER_WEEK = 2;                        // max 2 fois par semaine
 
 export default function FeedbackPopup() {
   const [open, setOpen]         = useState(false);
