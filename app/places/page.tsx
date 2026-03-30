@@ -448,7 +448,7 @@ function HeroCard({ place, activeTab, accentColor }: { place: PlaceItem; activeT
   const goDetails = () => { sessionStorage.setItem("places_scroll", JSON.stringify({ scrollY: window.scrollY, tab: activeTab })); router.push(`/place/${place.id}?cat=${encodeURIComponent(activeTab)}`); };
 
   return (
-    <div className="hero-card cursor-pointer rounded-3xl overflow-hidden relative"
+    <div className="hero-card cursor-pointer rounded-xl overflow-hidden relative"
       style={{ height: 380, border:"1px solid rgba(255,255,255,.1)", boxShadow:"0 20px 60px rgba(0,0,0,.5)" }}
       onClick={goDetails}>
       {primary ? (
@@ -515,7 +515,7 @@ function PlaceCard({ place, activeTab, accentColor, compact, rank }:
   const goDetails = () => { sessionStorage.setItem("places_scroll", JSON.stringify({ scrollY: window.scrollY, tab: activeTab })); router.push(`/place/${place.id}?cat=${encodeURIComponent(activeTab)}`); };
 
   return (
-    <div className="place-card cursor-pointer rounded-2xl overflow-hidden"
+    <div className="place-card cursor-pointer rounded-lg overflow-hidden"
       style={{
         border:"1px solid rgba(255,255,255,.08)",
         background:"rgba(255,255,255,.04)",

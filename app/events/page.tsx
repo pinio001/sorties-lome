@@ -365,7 +365,7 @@ function HeroEventCard({ event, activeTab }: { event: EventItem; activeTab: stri
   const timeText = formatTimeHM(event.event_time);
 
   return (
-    <div className="hero-ev cursor-pointer rounded-3xl overflow-hidden relative"
+    <div className="hero-ev cursor-pointer rounded-xl overflow-hidden relative"
       style={{ height:380, border:"1px solid rgba(255,255,255,.1)", boxShadow:"0 20px 60px rgba(0,0,0,.5)" }}
       onClick={() => { sessionStorage.setItem("events_scroll", JSON.stringify({ scrollY: window.scrollY, tab: activeTab })); router.push(`/event/${event.id}`); }}>
       {event.image ? (
@@ -426,7 +426,7 @@ function EventCard({ event, compact, activeTab }: { event: EventItem; compact?: 
   const timeText = formatTimeHM(event.event_time);
 
   return (
-    <div className="ev-card cursor-pointer rounded-2xl overflow-hidden"
+    <div className="ev-card cursor-pointer rounded-lg overflow-hidden"
       style={{ border:"1px solid rgba(255,255,255,.08)", background:"rgba(255,255,255,.04)", boxShadow:"0 4px 24px rgba(0,0,0,.3)" }}
       onClick={() => { sessionStorage.setItem("events_scroll", JSON.stringify({ scrollY: window.scrollY, tab: activeTab })); router.push(`/event/${event.id}`); }}>
 
