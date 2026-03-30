@@ -1,10 +1,60 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import BingoBackground from "../components/BingoBackground";
 import HeroCarousel from "../components/HeroCarousel";
+
+
+
+// ─── Composant titre animé (isolé pour ne pas re-rendre le carousel) ─────────
+const TypingTitle = React.memo(function TypingTitle() {
+  // Phrases courtes pour tenir sur une ligne
+  const phrases = [
+    "Ce soir à Lomé",
+    "Le prochain concert",
+    "L'afterwork parfait",
+    "La soirée du vendredi",
+    "Quel event ce soir ?",
+    "La scène de Lomé",
+    "Ton samedi commence ici",
+  ];
+  const [displayed, setDisplayed] = React.useState(phrases[0]);
+  const [phraseIdx, setPhraseIdx] = React.useState(0);
+  const [charIdx, setCharIdx]     = React.useState(phrases[0].length);
+  const [deleting, setDeleting]   = React.useState(false);
+
+  React.useEffect(() => {
+    const current = phrases[phraseIdx];
+    let timer: ReturnType<typeof setTimeout>;
+    if (!deleting && charIdx === current.length) {
+      timer = setTimeout(() => setDeleting(true), 2800);
+    } else if (deleting && charIdx === 0) {
+      setDeleting(false);
+      setPhraseIdx(i => (i + 1) % phrases.length);
+    } else {
+      timer = setTimeout(() => {
+        const next = deleting ? charIdx - 1 : charIdx + 1;
+        setDisplayed(current.slice(0, next));
+        setCharIdx(next);
+      }, deleting ? 35 : 85);
+    }
+    return () => clearTimeout(timer);
+  }, [charIdx, deleting, phraseIdx]);
+
+  return (
+    <h1 style={{
+      fontFamily:"Syne", fontWeight:800, fontSize:"clamp(26px,3.5vw,50px)",
+      lineHeight:1.15, color:"#fff", letterSpacing:"-0.5px"
+    }}>
+      <span style={{ display:"block", minHeight:"1.2em" }}>
+        {displayed}<span style={{ color:"#4ade80", animation:"blink 1s step-end infinite" }}>|</span>
+      </span>
+      <span style={{ color:"rgba(255,255,255,.6)" }}>les meilleurs events</span>
+    </h1>
+  );
+});
 
 type EventItem = {
   id: string;
@@ -181,6 +231,7 @@ export default function EventsPage() {
           0%   { background-position:-200% center; }
           100% { background-position:200% center; }
         }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
         @keyframes pulse-dot {
           0%,100% { transform:scale(1); opacity:1; }
           50%      { transform:scale(1.5); opacity:.5; }
@@ -258,10 +309,7 @@ export default function EventsPage() {
                 Events
               </span>
             </div>
-            <h1 style={{ fontFamily:"Syne", fontWeight:800, fontSize:"clamp(28px,4vw,52px)", lineHeight:1.1, color:"#fff", letterSpacing:"-1px" }}>
-              Les meilleures<br/>
-              <span style={{ color:"rgba(255,255,255,.7)" }}>soirées à Lomé</span>
-            </h1>
+            <TypingTitle />
             <p style={{ color:"rgba(255,255,255,.45)", fontSize:14, marginTop:8 }}>
               {filtered.length} événements · Concerts, clubs, afterworks & plus
             </p>

@@ -1,11 +1,84 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import BingoBackground from "../components/BingoBackground";
 import HeroCarousel from "../components/HeroCarousel";
 import FeedbackPopup from "../components/FeedbackPopup";
+
+
+
+// ─── Composant titre animé (isolé pour ne pas re-rendre le carousel) ─────────
+const TypingTitle = React.memo(function TypingTitle({ color }: { color: string }) {
+  // Chaque phrase = [ligne1, ligne2] — max ~14 chars par ligne
+  const phrases: [string, string][] = [
+    ["Où sortir",       "ce soir ?"],
+    ["Le meilleur",     "bar du moment"],
+    ["Ton resto",       "de ce vendredi"],
+    ["La meilleure",    "terrasse"],
+    ["Le bon plan",     "du week-end"],
+    ["Le club",         "qui cartonne"],
+    ["Ton hôtel",       "à Lomé"],
+    ["Où manger",       "ce midi ?"],
+  ];
+  const [idx, setIdx]         = React.useState(0);
+  const [line, setLine]       = React.useState<0|1>(0);
+  const [displayed, setDisp]  = React.useState(phrases[0][0]);
+  const [charIdx, setCharIdx] = React.useState(phrases[0][0].length);
+  const [deleting, setDeleting] = React.useState(false);
+
+  React.useEffect(() => {
+    const current = phrases[idx][line];
+    let timer: ReturnType<typeof setTimeout>;
+    if (!deleting && charIdx === current.length) {
+      // Pause plus longue sur la 2e ligne avant d'effacer
+      timer = setTimeout(() => setDeleting(true), line === 1 ? 2800 : 300);
+    } else if (deleting && charIdx === 0) {
+      setDeleting(false);
+      if (line === 0) {
+        // Passer à la ligne 2
+        setLine(1);
+        setDisp(phrases[idx][1]);
+        setCharIdx(0);
+      } else {
+        // Passer à la phrase suivante, repartir sur ligne 0
+        const next = (idx + 1) % phrases.length;
+        setIdx(next);
+        setLine(0);
+        setDisp("");
+        setCharIdx(0);
+      }
+    } else {
+      timer = setTimeout(() => {
+        const next = deleting ? charIdx - 1 : charIdx + 1;
+        setDisp(current.slice(0, next));
+        setCharIdx(next);
+      }, deleting ? 35 : 85);
+    }
+    return () => clearTimeout(timer);
+  }, [charIdx, deleting, idx, line]);
+
+  return (
+    <h1 style={{
+      fontFamily:"Syne", fontWeight:800, fontSize:"clamp(26px,3.5vw,50px)",
+      lineHeight:1.15, color:"#fff", letterSpacing:"-0.5px"
+    }}>
+      <span style={{ display:"block", minHeight:"1.2em" }}>
+        {line === 0
+          ? <>{displayed}<span style={{ color:"#4ade80", animation:"blink 1s step-end infinite" }}>|</span></>
+          : <span style={{ color:"rgba(255,255,255,.55)" }}>{phrases[idx][0]}</span>
+        }
+      </span>
+      <span style={{ display:"block", minHeight:"1.2em", color }}>
+        {line === 1
+          ? <>{displayed}<span style={{ color:"#4ade80", animation:"blink 1s step-end infinite" }}>|</span></>
+          : null
+        }
+      </span>
+    </h1>
+  );
+});
 
 type PlaceItem = {
   id: string;
@@ -195,6 +268,7 @@ export default function PlacesPage() {
           0%   { background-position: -200% center; }
           100% { background-position: 200% center; }
         }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
         @keyframes pulse-dot {
           0%,100% { transform:scale(1); opacity:1; }
           50%      { transform:scale(1.4); opacity:.6; }
@@ -289,13 +363,7 @@ export default function PlacesPage() {
                     {activeTab.label}
                   </span>
                 </div>
-                <h1 style={{
-                  fontFamily:"Syne", fontWeight:800, fontSize:"clamp(28px,4vw,52px)",
-                  lineHeight:1.1, color:"#fff", letterSpacing:"-1px"
-                }}>
-                  Où sortir<br/>
-                  <span style={{ color: activeTab.color }}>à Lomé ?</span>
-                </h1>
+                <TypingTitle color={activeTab.color} />
                 <p style={{ color:"rgba(255,255,255,.45)", fontSize:14, marginTop:8, fontFamily:"DM Sans" }}>
                   {filtered.length} spots disponibles · Trouvez votre bonheur ce soir
                 </p>
