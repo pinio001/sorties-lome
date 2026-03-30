@@ -38,8 +38,22 @@ db = create_client(SUPABASE_URL, SUPABASE_KEY)
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 def get_subscribers():
-    res = db.from_("bingo_users").select("email").eq("newsletter", True).not_.is_("email", "null").execute()
-    return [r["email"] for r in (res.data or []) if r.get("email")]
+    """Retourne dict avec listes email et phone des abonnés newsletter."""
+    res = db.from_("bingo_users").select("email, phone").eq("newsletter", True).execute()
+    emails = [r["email"] for r in (res.data or []) if r.get("email")]
+    phones = [r["phone"] for r in (res.data or []) if r.get("phone")]
+    return {"emails": emails, "phones": phones}
+
+def send_whatsapp_broadcast(phones: list[str], message: str):
+    """Génère les liens wa.me pour envoi manuel ou via l'outil broadcast existant."""
+    if not phones:
+        return
+    print(f"  📱 {len(phones)} numéros WhatsApp — liens générés dans wa_broadcast.txt")
+    encoded = requests.utils.quote(message)
+    lines = [f"https://wa.me/{p.replace('+','').replace(' ','')}?text={encoded}" for p in phones]
+    with open("wa_broadcast.txt", "w") as f:
+        f.write("\n".join(lines))
+    print("  → Fichier wa_broadcast.txt créé")
 
 def send_email(to_list: list[str], subject: str, html: str):
     if not to_list:
@@ -137,8 +151,12 @@ def send_weekly_events():
     </div>"""
 
     subs = get_subscribers()
-    print(f"  {len(events)} events · {len(subs)} abonnés")
-    send_email(subs, f"🎉 Cette semaine à Lomé — {len(events)} events à ne pas rater", email_wrapper(content))
+    print(f"  {len(events)} events · {len(subs['emails'])} emails · {len(subs['phones'])} WhatsApp")
+    send_email(subs["emails"], f"🎉 Cette semaine à Lomé — {len(events)} events à ne pas rater", email_wrapper(content))
+    wa_msg = f"🎉 Cette semaine à Lomé :\n\n" + "\n".join(
+        f"• {e.get('title','?')} — {e.get('event_date','')[:10]}" for e in events
+    ) + f"\n\n👉 Voir tous les events : {SITE_URL}/events"
+    send_whatsapp_broadcast(subs["phones"], wa_msg)
 
 
 # ─── 2. Spot de la semaine ────────────────────────────────────────────────────
@@ -175,8 +193,10 @@ def send_weekly_spot():
     </div>"""
 
     subs = get_subscribers()
-    print(f"  Spot: {spot['name']} · {len(subs)} abonnés")
-    send_email(subs, f"✨ Spot de la semaine : {spot['name']}", email_wrapper(content))
+    print(f"  Spot: {spot['name']} · {len(subs['emails'])} emails · {len(subs['phones'])} WhatsApp")
+    send_email(subs["emails"], f"✨ Spot de la semaine : {spot['name']}", email_wrapper(content))
+    wa_msg = f"✨ Spot de la semaine sur Bingo228 :\n\n*{spot['name']}*\n📍 {spot.get('location','Lomé')}\n\n{spot.get('description','')[:200]}\n\n👉 {SITE_URL}/place/{spot['id']}"
+    send_whatsapp_broadcast(subs["phones"], wa_msg)
 
 
 # ─── 3. Nouvel event ─────────────────────────────────────────────────────────
@@ -199,8 +219,10 @@ def send_new_event(event_id: str):
     {card}"""
 
     subs = get_subscribers()
-    print(f"  Nouvel event: {event.get('title','?')} · {len(subs)} abonnés")
-    send_email(subs, f"🔔 Nouvel event : {event.get('title','?')}", email_wrapper(content))
+    print(f"  Nouvel event: {event.get('title','?')} · {len(subs['emails'])} emails · {len(subs['phones'])} WhatsApp")
+    send_email(subs["emails"], f"🔔 Nouvel event : {event.get('title','?')}", email_wrapper(content))
+    wa_msg = f"🔔 Nouvel event sur Bingo228 !\n\n*{event.get('title','?')}*\n📍 {event.get('location','')}\n📅 {event.get('event_date','')[:10]}\n\n👉 {SITE_URL}/event/{event['id']}"
+    send_whatsapp_broadcast(subs["phones"], wa_msg)
 
 
 # ─── Main ─────────────────────────────────────────────────────────────────────

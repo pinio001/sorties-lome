@@ -34,6 +34,11 @@ export default function InscriptionPage() {
       // Sauvegarder l'user_id en localStorage
       if (data.user_id) localStorage.setItem("bingo_user_id", data.user_id);
       if (data.pseudo)  localStorage.setItem("bingo_pseudo", data.pseudo);
+
+      // Ouvrir WhatsApp si numéro fourni
+      if (data.wa_link) {
+        setTimeout(() => window.open(data.wa_link, "_blank"), 500);
+      }
       setSuccess(true);
     } catch { setError("Erreur réseau"); }
     finally { setLoading(false); }
