@@ -41,8 +41,8 @@ export default function HeroCarousel({ items }: Props) {
   const item = shuffled[current];
 
   return (
-    <div className="relative mb-8 overflow-hidden rounded-3xl"
-      style={{ height: 280, boxShadow:"0 20px 60px rgba(0,0,0,.6)" }}
+    <div className="relative mb-8 overflow-hidden"
+      style={{ height: "min(280px, 75vw)", boxShadow:"0 20px 60px rgba(0,0,0,.6)" }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}>
 

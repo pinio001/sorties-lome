@@ -124,8 +124,8 @@ export default function PlacesPage() {
 
   const handleTabChange = (t: TabKey) => {
     setTab(t);
-    // Reset filtres lieu/budget quand on quitte bar_resto
-    if (t !== "bar_resto") { setLoc("TOUS"); setBudget("TOUS"); }
+    // Reset budget seulement quand on quitte bar_resto
+    if (t !== "bar_resto") { setBudget("TOUS"); }
     const url = new URL(window.location.href);
     url.searchParams.set("tab", t);
     window.history.replaceState(null, "", url.toString());
@@ -313,22 +313,20 @@ export default function PlacesPage() {
                     style={{ background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.12)" }}
                   />
                 </div>
+                <select value={loc} onChange={(e) => setLoc(e.target.value)}
+                  className="px-3 py-2.5 rounded-xl text-sm text-white"
+                  style={{ background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.12)" }}>
+                  {locationOptions.map((l) => <option key={l} value={l} style={{ background:"#0c1220" }}>{l === "TOUS" ? "Filtre par lieu" : l}</option>)}
+                </select>
                 {tab === "bar_resto" && (
-                  <>
-                    <select value={loc} onChange={(e) => setLoc(e.target.value)}
-                      className="px-3 py-2.5 rounded-xl text-sm text-white"
-                      style={{ background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.12)" }}>
-                      {locationOptions.map((l) => <option key={l} value={l} style={{ background:"#0c1220" }}>{l === "TOUS" ? "Filtre par lieu" : l}</option>)}
-                    </select>
-                    <select value={budget} onChange={(e) => setBudget(e.target.value)}
-                      className="px-3 py-2.5 rounded-xl text-sm text-white"
-                      style={{ background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.12)" }}>
-                      <option value="TOUS" style={{ background:"#0c1220" }}>Budget min</option>
-                      <option value="€"   style={{ background:"#0c1220" }}>€ — &lt; 5 000 F</option>
-                      <option value="€€"  style={{ background:"#0c1220" }}>€€ — 5–15 000 F</option>
-                      <option value="€€€" style={{ background:"#0c1220" }}>€€€ — &gt; 15 000 F</option>
-                    </select>
-                  </>
+                  <select value={budget} onChange={(e) => setBudget(e.target.value)}
+                    className="px-3 py-2.5 rounded-xl text-sm text-white"
+                    style={{ background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.12)" }}>
+                    <option value="TOUS" style={{ background:"#0c1220" }}>Budget min</option>
+                    <option value="€"   style={{ background:"#0c1220" }}>€ — &lt; 5 000 F</option>
+                    <option value="€€"  style={{ background:"#0c1220" }}>€€ — 5–15 000 F</option>
+                    <option value="€€€" style={{ background:"#0c1220" }}>€€€ — &gt; 15 000 F</option>
+                  </select>
                 )}
                 {(q || loc !== "TOUS" || budget !== "TOUS") && (
                   <button onClick={() => { setQ(""); setLoc("TOUS"); setBudget("TOUS"); }}
