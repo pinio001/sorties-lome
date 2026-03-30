@@ -38,7 +38,7 @@ const TypingTitle = React.memo(function TypingTitle() {
         const next = deleting ? charIdx - 1 : charIdx + 1;
         setDisplayed(current.slice(0, next));
         setCharIdx(next);
-      }, deleting ? 35 : 85);
+      }, deleting ? 55 : 130);
     }
     return () => clearTimeout(timer);
   }, [charIdx, deleting, phraseIdx]);
