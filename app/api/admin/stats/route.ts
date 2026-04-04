@@ -58,14 +58,55 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // ─── 4. Top pages ─────────────────────────────────────────────────────────
+    // ─── 4. Top pages — avec résolution des noms place/event ───────────────────
     const pageCount: Record<string, number> = {};
     for (const row of views) {
-      const p = row.path ?? "/";
+      // Normaliser le path : supprimer query string et domaine si collé
+      let p = (row.path ?? "/").split("?")[0].trim();
+      // Cas où le domaine est collé au path (ex: "/place/xxx?...https://bingo228.com/...")
+      const dupIdx = p.indexOf("https://");
+      if (dupIdx > 0) p = p.slice(0, dupIdx);
       pageCount[p] = (pageCount[p] ?? 0) + 1;
     }
+
+    // Résoudre les IDs place et event en vrais noms
+    const placeIdSet  = new Set<string>();
+    const eventIdSet  = new Set<string>();
+    for (const path of Object.keys(pageCount)) {
+      const mp = path.match(/^\/place\/([a-f0-9-]{36})$/);
+      const me = path.match(/^\/event\/([a-f0-9-]{36})$/);
+      if (mp) placeIdSet.add(mp[1]);
+      if (me) eventIdSet.add(me[1]);
+    }
+
+    const nameMap: Record<string, string> = {};
+    if (placeIdSet.size) {
+      const { data: pn } = await supabaseAdmin
+        .from("places").select("id, name").in("id", [...placeIdSet]);
+      for (const p of pn ?? []) nameMap[`/place/${p.id}`] = p.name;
+    }
+    if (eventIdSet.size) {
+      const { data: en } = await supabaseAdmin
+        .from("events").select("id, title").in("id", [...eventIdSet]);
+      for (const e of en ?? []) nameMap[`/event/${e.id}`] = e.title;
+    }
+
+    const PAGE_LABELS: Record<string, string> = {
+      "/":        "Accueil",
+      "/places":  "Places",
+      "/events":  "Events",
+      "/inscription": "Inscription",
+      "/soumettre":   "Soumettre",
+      "/admin":       "Admin",
+    };
+
     const topPages = Object.entries(pageCount)
-      .map(([path, count]) => ({ path, count }))
+      .map(([path, count]) => ({
+        path,
+        label: nameMap[path] ?? PAGE_LABELS[path] ?? path,
+        count,
+        href: path,
+      }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 20);
 

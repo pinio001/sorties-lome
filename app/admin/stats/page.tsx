@@ -16,7 +16,7 @@ type StatsPayload = {
   since: string;
   totals: { views: number; unique_visitors: number };
   daily: DayStat[];
-  topPages: { path: string; count: number }[];
+  topPages: { path: string; label: string; count: number; href: string }[];
   topPlaces: { id: string; name: string; count: number; href: string }[];
   topEvents: { id: string; title: string; count: number; href: string }[];
   topCountries: { country: string; count: number; pct: number }[];
