@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
-  const days = Math.min(Math.max(parseInt(searchParams.get("days") ?? "30", 10), 1), 90);
+  const days = Math.min(Math.max(parseInt(searchParams.get("days") ?? "30", 10), 1), 180);
 
   const since = new Date();
   since.setDate(since.getDate() - days);
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     // ─── 1. Toutes les vues de la période ─────────────────────────────────────
     const { data: allViews, error: viewsErr } = await supabaseAdmin
       .from("page_views")
-      .select("path, created_at, device_id, referrer, utm_source, utm_medium, utm_campaign")
+      .select("path, created_at, device_id, referrer, utm_source, utm_medium, utm_campaign, country")
       .gte("created_at", since.toISOString());
 
     if (viewsErr) throw new Error(viewsErr.message);
@@ -116,7 +116,18 @@ export async function GET(req: NextRequest) {
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
 
-    // ─── 8. Réponse ───────────────────────────────────────────────────────────
+    // ─── 8. Top pays ──────────────────────────────────────────────────────────
+    const countryCount: Record<string, number> = {};
+    for (const row of views) {
+      const country = row.country || "Inconnu";
+      countryCount[country] = (countryCount[country] ?? 0) + 1;
+    }
+    const topCountries = Object.entries(countryCount)
+      .map(([country, count]) => ({ country, count, pct: Math.round(count / totalViews * 100) }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 15);
+
+    // ─── 9. Réponse ───────────────────────────────────────────────────────────
     return NextResponse.json({
       ok: true,
       days,
@@ -127,6 +138,7 @@ export async function GET(req: NextRequest) {
       topPlaces,
       topEvents,
       topSources,
+      topCountries,
     });
 
   } catch (err: any) {

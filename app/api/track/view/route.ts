@@ -20,16 +20,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Pays via header Vercel (disponible en production uniquement)
+    const country  = req.headers.get("x-vercel-ip-country")      ?? null;
+    const city     = req.headers.get("x-vercel-ip-city")         ?? null;
+
     const payload = {
       path,
-      referrer: typeof body.referrer === "string" ? body.referrer : null,
+      referrer:     typeof body.referrer     === "string" ? body.referrer     : null,
       device_id,
-      entity_type: typeof body.entity_type === "string" ? body.entity_type : null,
-      entity_id: typeof body.entity_id === "string" ? body.entity_id : null,
-      utm_source: typeof body.utm_source === "string" ? body.utm_source : null,
-      utm_medium: typeof body.utm_medium === "string" ? body.utm_medium : null,
-      utm_campaign:
-        typeof body.utm_campaign === "string" ? body.utm_campaign : null,
+      entity_type:  typeof body.entity_type  === "string" ? body.entity_type  : null,
+      entity_id:    typeof body.entity_id    === "string" ? body.entity_id    : null,
+      utm_source:   typeof body.utm_source   === "string" ? body.utm_source   : null,
+      utm_medium:   typeof body.utm_medium   === "string" ? body.utm_medium   : null,
+      utm_campaign: typeof body.utm_campaign === "string" ? body.utm_campaign : null,
+      country,
+      city,
     };
 
     const { error } = await supabaseAdmin.from("page_views").insert(payload);
